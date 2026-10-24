@@ -4,7 +4,6 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
 import static com.nvidia.rtxremix.minecraft.entity.RemixEntitySubmitter.SHELL_OFFSET;
@@ -88,9 +87,9 @@ class RemixEntitySubmitterCanvasMeshTest {
             float shell = (LAYER + layer + 1) * SHELL_OFFSET;
             for (ModelPart.Polygon quad : flag) {
                 for (ModelPart.Vertex vertex : quad.vertices) {
-                    assertEquals(vertex.pos.x / 16f + quad.normal.x() * shell, px[i], EPSILON, "x of vertex " + i);
-                    assertEquals(vertex.pos.y / 16f + quad.normal.y() * shell, py[i], EPSILON, "y of vertex " + i);
-                    assertEquals(vertex.pos.z / 16f + quad.normal.z() * shell, pz[i], EPSILON, "z of vertex " + i);
+                    assertEquals(vertex.x() / 16f + quad.normal().x() * shell, px[i], EPSILON, "x of vertex " + i);
+                    assertEquals(vertex.y() / 16f + quad.normal().y() * shell, py[i], EPSILON, "y of vertex " + i);
+                    assertEquals(vertex.z() / 16f + quad.normal().z() * shell, pz[i], EPSILON, "z of vertex " + i);
                     i++;
                 }
             }
@@ -120,7 +119,7 @@ class RemixEntitySubmitterCanvasMeshTest {
         for (int q = 0; q < sides.length; q++) {
             ModelPart.Vertex[] vertices = new ModelPart.Vertex[4];
             for (int v = 0; v < 4; v++) {
-                vertices[v] = new ModelPart.Vertex(new Vector3f(q + v, q * 2, v), 0f, 0f);
+                vertices[v] = new ModelPart.Vertex(q + v, q * 2, v, 0f, 0f);
             }
             sides[q] = new ModelPart.Polygon(vertices, 1, 1, 21, 41, 64, 64, false, directions[q]);
         }

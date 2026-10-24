@@ -65,7 +65,7 @@ public final class ReachedChunkSet extends LinkedHashSet<Node> {
         if (index < 0 || index >= stamp.length) {
             throw new IllegalArgumentException("Section index " + index + " outside storage of " + stamp.length);
         }
-        long origin = info.section.getOrigin().asLong();
+        long origin = info.section.getRenderOrigin().asLong();
         if (stamp[index] == walk && originAtIndex[index] == origin) {
             return false;
         }
@@ -85,7 +85,7 @@ public final class ReachedChunkSet extends LinkedHashSet<Node> {
         }
         int index = info.section.index;
         return index >= 0 && index < stamp.length && stamp[index] == walk
-                && originAtIndex[index] == info.section.getOrigin().asLong();
+                && originAtIndex[index] == info.section.getRenderOrigin().asLong();
     }
 
     @Override

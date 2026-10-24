@@ -40,8 +40,8 @@ public final class FarChunkProbe {
      * @param cameraSectionCenterX camera section origin plus eight, per axis; picks the corner
      *                             of the neighbour the ray starts from
      * @param step                 ray advance per iteration in blocks
-     * @param worldTopYExclusive   one past the highest block, as {@code LevelHeightAccessor.getMaxBuildHeight()}
-     *                             returns it (320 for the overworld); a point above it or below
+     * @param worldTopYExclusive   one past the highest block, as {@code LevelHeightAccessor.getMaxY() + 1}
+     *                             (320 for the overworld); a point above it or below
      *                             {@code worldBottomY} leaves the world, which passes
      * @param worldBottomY         inclusive bottom of the world
      * @return true when every probed section is in the graph or the ray left the world

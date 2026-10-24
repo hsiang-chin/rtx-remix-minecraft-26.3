@@ -202,7 +202,7 @@ Replay the net change, not just the entry. `renderSectionLayer` pairs
 `setupRenderState()` with `clearRenderState()`, so skipping it is state-neutral while
 replaying only its entry would not be.
 
-A pure read or early-return guard needs no replay. In Minecraft 1.21.1,
+A pure read or early-return guard needs no replay. In the Minecraft 1.21.1 renderer these examples were written against,
 `renderClouds` returns for a dimension without cloud height, `renderSnowAndRain`
 returns without rain, and `renderEntity` starts with position interpolation.
 Check the pinned Minecraft version rather than treating these examples as
@@ -211,29 +211,27 @@ permanent contracts.
 Cancel only draws that Remix replaces, such as terrain layers, particles and
 clouds. Do not bypass the outer vanilla traversal: camera, frustum, matrices,
 framebuffers, tick delta, in-place entity capture, section scheduling, and
-`WorldRenderEvents` all come from it. Judge a cancellation by its injection
+`LevelRenderEvents` all come from it. Judge a cancellation by its injection
 and state correctness, not only a frame-time delta. A GPU-bound run can hide a
 real render-thread saving.
 
 ### Reading Vanilla Bytecode
 
-The Mojang-named merged JAR Loom already caches is enough for `javap`;
-generating all decompiled sources is not necessary. The mappings are
-`loom.officialMojangMappings()` in `build.gradle`, so the cache directory is
-named `<minecraft-version>-loom.mappings.<minecraft-version>.layered+hash.<n>-v2`.
-Old directories remain in the cache after a Minecraft or Loom change, so select
-the most recently modified one. The sibling
-`~/.gradle/caches/fabric-loom/<minecraft-version>/minecraft-merged.jar` is the
-obfuscated merge, not the Mojang-named one. Lambdas have no Mojang name and
-keep their intermediary `method_NNNNN` name in this JAR, which is also how
-`ChunkRenderingDataPreparerMixin` targets one.
+Minecraft 26.3 ships unobfuscated, so there are no mappings and no remap step.
+The merged client and server JAR Loom already caches is enough for `javap`;
+generating all decompiled sources is not necessary, though `gradlew genSources`
+writes a sources JAR under `.gradle/loom-cache/` when you want to read one.
+The cache directory is
+`~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf/<minecraft-version>/`.
+Lambdas keep their compiler-generated `lambda$...` names, so a mixin that
+targets one has to name it.
 
 A Git Bash example, with the directory name filled in from the cache, is:
 
 ```bash
-merged=~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged
-version=1.21.1-loom.mappings.1_21_1.layered+hash.2198-v2
-javap -p -c -classpath "$merged/$version/minecraft-merged-$version.jar" com.mojang.blaze3d.vertex.VertexConsumer
+merged=~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged-deobf
+version=26.3
+javap -p -c -classpath "$merged/$version/minecraft-merged-deobf-$version.jar" com.mojang.blaze3d.vertex.VertexConsumer
 ```
 
 If you need to search all callers of a descriptor, extract the whole JAR into
@@ -246,7 +244,7 @@ the extraction afterwards. Do not leave thousands of class files in the tree.
 
 `Mixing X from ... into net.minecraft...` in `run/logs/debug.log` proves
 registration, not an applied injection or an executed target. The check reads
-Loom's Mojang-named development client, which `runClient`, Fabric's standard
+Loom's development client, which `runClient`, Fabric's standard
 Gradle task, starts from `run/`. Temporarily add `-Dmixin.debug.export=true` to
 the client `vmArgs` in `build.gradle`, launch `runClient`, and disassemble the
 transformed class under
@@ -258,9 +256,7 @@ An `@Inject` merges a `handler$<id>$rtx-remix-renderer$<handler name>` method
 and a call at the intended offset: `invokespecial` for a private instance
 handler, `invokestatic` for a static one. If the call is present but does not
 fire, investigate vanilla's frustum, dimension, cloud-mode and weather gates.
-Exports and the classes loaded from `build/classes/` use Mojang names. The
-remapped JAR in `build/libs/` instead embeds intermediary `method_NNNNN` names
-in injection annotations. Remove the diagnostic flag and export afterwards.
+Remove the diagnostic flag and export afterwards.
 
 ## Tests
 
@@ -281,7 +277,7 @@ position, are the most useful thing you can attach.
 
 For wrapper changes, the same root Gradle workflow compiles the shim with its
 mod callers and builds the bridge into `build/native/{win64|arm64}/`.
-Visual Studio C++ tools and `JAVA_HOME` pointing to a 64-bit JDK 21 are
+Visual Studio C++ tools and `JAVA_HOME` pointing to a 64-bit JDK 25 are
 required. Gradle fetches the pinned runtime automatically when it is missing.
 Use `.\tools\rtx.bat sdk local --path <runtime dir> --arch win64` for a local build,
 as described in [Getting Started](docs/GETTING_STARTED.md#get-a-runtime).
@@ -374,7 +370,7 @@ runners. [`check`](.github/workflows/check.yml) installs uv and runs
 `tools\rtx.bat check --tests`: Ruff formatting and lint, ty, the Python tests,
 and the public-boundary gate. On a pull request it also scans the commit
 messages from the base SHA to the head SHA.
-[`build`](.github/workflows/build.yml) installs JDK 21 and runs
+[`build`](.github/workflows/build.yml) installs JDK 25 and runs
 `gradlew.bat build test`. Both use read-only repository permissions and no
 secrets, including for fork pull requests. The build fetches the pinned
 runtime from public Packman, so it needs no credentials; never add private

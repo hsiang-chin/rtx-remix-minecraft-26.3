@@ -208,6 +208,12 @@ public final class RemixBlockDamagePass {
         }
 
         @Override
+        public VertexConsumer setColor(int color) {
+            target.setColor(0xFFFFFFFF);
+            return this;
+        }
+
+        @Override
         public VertexConsumer setUv(float u, float v) {
             return this;
         }
@@ -225,8 +231,18 @@ public final class RemixBlockDamagePass {
         }
 
         @Override
+        public VertexConsumer setUv3(float u, float v) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setLineWidth(float width) {
+            return this;
+        }
+
+        @Override
         public VertexConsumer setNormal(float x, float y, float z) {
-            Direction face = Direction.getNearest(x, y, z);
+            Direction face = Direction.getApproximateNearest(x, y, z);
             projected.set(this.x, this.y, this.z)
                     .rotateY(Mth.PI)
                     .rotateX(-Mth.HALF_PI)

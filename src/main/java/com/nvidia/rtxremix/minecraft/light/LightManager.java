@@ -22,6 +22,7 @@ import com.nvidia.rtxremix.minecraft.block.CopperBeaconPose;
 import com.nvidia.rtxremix.minecraft.block.SpotLightBlock;
 import com.nvidia.rtxremix.minecraft.entity.CopperBeaconAnimationClock;
 import com.nvidia.rtxremix.minecraft.entity.RemixFirstPersonPass;
+import com.nvidia.rtxremix.minecraft.sky.SkyAttributes;
 import com.nvidia.rtxremix.minecraft.texture.BlockTextureManager;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import org.joml.Matrix4f;
@@ -41,7 +42,6 @@ import java.util.Set;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -409,7 +409,7 @@ public class LightManager {
 
         firstPersonShadowModelOffset = shadowModelPlacement.resolve(
                 world, camera, player, constraints, frameDtSeconds);
-        Vec3 displacedHeadCenter = camera.getPosition().add(firstPersonShadowModelOffset);
+        Vec3 displacedHeadCenter = camera.position().add(firstPersonShadowModelOffset);
 
         // The rig lights surfaces but never the air. A first-person emitter is
         // locked to the camera, and the volumetric grid reuses the previous
@@ -621,7 +621,7 @@ public class LightManager {
 
         Transformation transform =
                 renderState.transformation().get(display.calculateInterpolationProgress(tickDelta));
-        Matrix4f matrix = transform.getMatrix();
+        Matrix4f matrix = new Matrix4f(transform.getMatrix());
 
         // Matches DisplayRenderer.calculateOrientation for BillboardMode.FIXED.
         float yaw = Mth.rotLerp(tickDelta, display.yRotO, display.getYRot());
@@ -799,7 +799,7 @@ public class LightManager {
                 lensOffsetDirection.scale(BeaconBeam.HELD_LENS_OFFSET));
         float coneAngle = BeaconBeam.CONE_ANGLE_DEGREES;
         if (localFirstPerson && collisionWorld != null && collisionCamera != null) {
-            Vec3 collisionOrigin = collisionCamera.getPosition();
+            Vec3 collisionOrigin = collisionCamera.position();
             Vec3 preferredOffset = pos.subtract(collisionOrigin);
             double preferredDistance = preferredOffset.length();
             if (preferredDistance > 1.0e-6) {
@@ -1036,9 +1036,9 @@ public class LightManager {
     private void updateSkyLight(ClientLevel world) {
         // Only a NORMAL sky has a sun and a moon. The End and the Nether pin their time, so
         // evaluating them would light a permanent noon or midnight that vanilla never draws.
-        skyLightState = world.effects().skyType() == DimensionSpecialEffects.SkyType.NORMAL
+        skyLightState = SkyAttributes.kindOf(world) == SkyAttributes.SkyKind.NORMAL
                 ? evaluateSkyLightState(
-                        world.getTimeOfDay(0f),
+                        SkyAttributes.sunAngleTurns(0f),
                         world.getRainLevel(0.0f),
                         world.getThunderLevel(0.0f))
                 : SkyLightState.empty();

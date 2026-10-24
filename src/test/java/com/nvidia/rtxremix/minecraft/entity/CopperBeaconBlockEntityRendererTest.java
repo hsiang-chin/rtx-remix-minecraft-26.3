@@ -7,6 +7,7 @@ package com.nvidia.rtxremix.minecraft.entity;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Quadrant;
 import com.nvidia.rtxremix.minecraft.block.CopperBeaconPose;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.resources.model.BlockModelRotation;
 import net.minecraft.core.Direction;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +84,7 @@ class CopperBeaconBlockEntityRendererTest {
                     continue;
                 }
                 matrices.pushPose();
-                matrices.mulPose(
+                matrices.rotate(
                         CopperBeaconBlockEntityRenderer.mountingRotation(mount, forward));
                 for (float yaw : angles) {
                     for (float pitch : angles) {
@@ -161,17 +161,17 @@ class CopperBeaconBlockEntityRendererTest {
         assertEquals(
                 "rtx-remix-renderer:block/copper_beacon_lens",
                 CopperBeaconBlockEntityRenderer.lensTexture(true, 1.0f)
-                        .texture()
+                        .sprite()
                         .toString());
         assertEquals(
                 "rtx-remix-renderer:block/copper_beacon_lens_unlit",
                 CopperBeaconBlockEntityRenderer.lensTexture(false, 1.0f)
-                        .texture()
+                        .sprite()
                         .toString());
         assertEquals(
                 "rtx-remix-renderer:block/copper_beacon_lens_unlit",
                 CopperBeaconBlockEntityRenderer.lensTexture(true, 0.0f)
-                        .texture()
+                        .sprite()
                         .toString());
     }
 
@@ -290,8 +290,7 @@ class CopperBeaconBlockEntityRendererTest {
                     readBaseModelDirection(variant.get("model").getAsString());
             directions.put(
                     mount,
-                    BlockModelRotation.by(x, y)
-                            .actualRotation()
+                    Quadrant.fromXYAngles(Quadrant.parseJson(x), Quadrant.parseJson(y))
                             .rotate(unrotatedDirection));
         }
         return directions;

@@ -4,12 +4,13 @@
  */
 package com.nvidia.rtxremix.minecraft.input;
 
-import org.lwjgl.glfw.GLFW;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 import java.util.function.ToIntBiFunction;
+
+import com.mojang.blaze3d.platform.InputConstants;
 
 /**
  * Owns Minecraft-side input capture for the Remix overlay.
@@ -81,10 +82,17 @@ public final class RemixInputGate {
      */
     private final byte[] resolvedVisibility = new byte[RESOLVED_HIDDEN_MENU.length];
 
-    /** Decides whether Minecraft may handle a key event. */
+    /**
+     * Decides whether Minecraft may handle a key event.
+     *
+     * <p>TODO(port-26.3: input): {@code key} and {@code action} now use
+     * {@link InputConstants}: a key is an SDL scancode, not a GLFW key code, and
+     * {@code REPEAT} is -1. The mixins that feed this are parked, so nothing converts
+     * their arguments yet.
+     */
     public KeyDecision onKey(int key, int action, boolean altDown, boolean controlDown) {
-        boolean altX = action == GLFW.GLFW_PRESS
-                && key == GLFW.GLFW_KEY_X
+        boolean altX = action == InputConstants.PRESS
+                && key == InputConstants.KEY_X
                 && altDown
                 && !controlDown;
         if (captureSessionOpen) {
