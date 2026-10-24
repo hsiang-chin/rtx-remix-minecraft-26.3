@@ -5,8 +5,6 @@
 package com.nvidia.rtxremix.minecraft.terrain.capture;
 
 import com.nvidia.rtxremix.HardcodedVertex;
-import net.minecraft.util.math.ChunkSectionPos;
-
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -16,6 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
+import net.minecraft.core.SectionPos;
 
 /**
  * Thread-safe queue that transfers block-gen section data from chunk-build
@@ -37,7 +36,7 @@ public final class BlockDataQueue {
             Long.getLong("rtxremix.blockDataQueue.maxDrainBytes", DEFAULT_MAX_DRAIN_BYTES));
     // Total time a producer may block on a full queue before trading the
     // oldest queued capture for liveness. Producers are vanilla's shared
-    // chunk workers holding ChunkBuilder buffer slots; parking them
+    // chunk workers holding SectionRenderDispatcher buffer slots; parking them
     // indefinitely halts world loading everywhere, so a wedged or outpaced
     // drain must cost a recapture, never a frozen worker pool.
     private static final long DEFAULT_PUBLISH_WAIT_BUDGET_NS = Math.max(50_000_000L,
@@ -132,7 +131,7 @@ public final class BlockDataQueue {
     }
 
     /**
-     * Called with the identity captured at SectionBuilder.build HEAD. Takes over
+     * Called with the identity captured at SectionCompiler.compile HEAD. Takes over
      * the capture's mesh data: it is released here when the capture is dropped
      * and otherwise travels to the render thread with the queue entry.
      */
@@ -286,7 +285,7 @@ public final class BlockDataQueue {
         if (!isCaptureCurrent(state, data, capture)) return false;
         if (tryReserveCapacity(state, bytes)) return true;
 
-        // WorldRenderer can rebuild nearby chunks synchronously. It is also
+        // LevelRenderer can rebuild nearby chunks synchronously. It is also
         // the sole consumer, so waiting here would prevent the queue from ever
         // freeing capacity. Worker captures remain subject to both bounds.
         if (isRenderThread()) {
@@ -375,7 +374,7 @@ public final class BlockDataQueue {
         state.pendingBytes.addAndGet(-head.bytes);
         releaseMeshData(head.capture.data());
 
-        ChunkSectionPos sacrificed = head.capture.data().sectionPos();
+        SectionPos sacrificed = head.capture.data().sectionPos();
         if (isCurrent(head.capture) && !sacrificed.equals(incoming.sectionPos())) {
             BACKPRESSURE_EVICTIONS.incrementAndGet();
             state.evictedSections.add(new EvictedSection(

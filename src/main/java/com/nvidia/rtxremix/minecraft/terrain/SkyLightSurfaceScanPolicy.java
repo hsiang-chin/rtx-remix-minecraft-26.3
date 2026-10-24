@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Decides whether the client's chunk apply seeds the sky-light surface scan from the
  * packet's {@code WORLD_SURFACE} heightmap.
  *
- * <p>Vanilla recomputes {@code ChunkSkyLight} for every chunk the client receives by
+ * <p>Vanilla recomputes {@code ChunkSkyLightSources} for every chunk the client receives by
  * walking each of the 256 columns downward from the top of the chunk's highest non-empty
  * section until a block pair blocks sky light. Almost all of that walk is air over air,
  * which never blocks, and it is most of the render thread's cost of applying a chunk.
@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>The seed is a contract on the sender, not a definition. The walk assumes that every
  * block at or above {@code WORLD_SURFACE.get(x, z)} in the sections of the same packet is
  * air, which is how vanilla computes that heightmap (its {@code NOT_AIR} predicate) for the
- * chunks it generates or edits in memory, and {@code ChunkData} serializes heightmaps and
+ * chunks it generates or edits in memory, and {@code ClientboundLevelChunkPacketData} serializes heightmaps and
  * sections from one chunk. Vanilla checks only the array's length on receipt, so a save
  * whose stored heightmaps were edited out of step with its blocks, or a non-vanilla sender,
  * can break the contract: a height below a real block lowers that column's sky-light surface

@@ -8,7 +8,7 @@ package com.nvidia.rtxremix.minecraft.terrain.visibility;
  * Repositions the horizontal ring of vanilla built-chunk slots as the camera
  * moves, and reports how many slots were re-originned.
  *
- * <p>The wrap arithmetic must match {@code BuiltChunkStorage.updateCameraPosition}
+ * <p>The wrap arithmetic must match {@code ViewArea.repositionCamera}
  * bit for bit: a slot that lands on a different origin from the one vanilla would
  * have chosen puts vanilla's visibility graph and the Remix terrain index on
  * different chunks. Render thread only, alongside the storage it mutates.
@@ -42,7 +42,7 @@ public final class ChunkStorageTorus {
         }
 
         int movedSlots = 0;
-        // BuiltChunkStorage maintains one X origin per storage column and one Z
+        // ViewArea maintains one X origin per storage column and one Z
         // origin per storage row. Horizontal camera movement therefore changes
         // complete planes; slot Y never changes without rebuilding the storage.
         for (int x = 0; x < sizeX; x++) {

@@ -6,7 +6,7 @@ package com.nvidia.rtxremix.minecraft.terrain;
 
 /**
  * Decides how one client light storage publishes its thread-safe snapshot in
- * {@code LightStorage.notifyChanges}.
+ * {@code LayerLightSectionStorage.swapSectionMap}.
  *
  * <p>Vanilla clones the whole section map into {@code uncachedStorage} on every pass that
  * changed a section, so worker threads can read light while the engine mutates its private

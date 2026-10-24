@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 /**
  * CPU copy of one font glyph-atlas page.
  *
- * <p>Minecraft assembles a {@code GlyphAtlasTexture} on the GPU: each glyph is uploaded
+ * <p>Minecraft assembles a {@code FontTexture} on the GPU: each glyph is uploaded
  * into its slot the first time it is rendered, from a source image that may be freed the
  * moment the upload returns, so the GL texture is the only complete copy of the page.
  * Remix needs the pixels to build a material for text quads, so this mirror follows
@@ -29,7 +29,7 @@ import java.nio.ByteBuffer;
  */
 public final class GlyphPageMirror {
 
-    /** Side of every page in pixels, as {@code GlyphAtlasTexture} hardcodes it for slots and UVs. */
+    /** Side of every page in pixels, as {@code FontTexture} hardcodes it for slots and UVs. */
     public static final int PAGE_SIZE = 256;
     private static final int CHANNELS = 4;
 

@@ -4,8 +4,8 @@
  */
 package com.nvidia.rtxremix.minecraft.terrain.visibility;
 
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 
 /**
  * Vanilla's line-of-sight probe for sections far from the camera, without its per-step
@@ -14,7 +14,7 @@ import net.minecraft.util.math.MathHelper;
  * <p>Vanilla's visibility walk admits a neighbour more than 60 blocks from the camera only if
  * a ray from the neighbour's near corner toward the camera passes exclusively through
  * sections that exist and are already in the visible graph. It advances the ray in fixed
- * steps and, per step, allocates a Vec3d for the remaining offset, a Vec3d for the advanced
+ * steps and, per step, allocates a Vec3 for the remaining offset, a Vec3 for the advanced
  * point and a BlockPos for the lookup. This reproduces the same arithmetic in the same order
  * on doubles, so the probed positions and the verdict are bit-identical to vanilla's.
  */
@@ -28,7 +28,7 @@ public final class FarChunkProbe {
 
     /** Squared distance at which the ray is close enough to the camera to stop. */
     private static final double NEAR_CAMERA_DISTANCE_SQUARED = 3600.0;
-    /** Below this length vanilla's {@code Vec3d.normalize} yields the zero vector. */
+    /** Below this length vanilla's {@code Vec3.normalize} yields the zero vector. */
     private static final double NORMALIZE_EPSILON = 1.0E-4;
 
     private FarChunkProbe() {}
@@ -40,7 +40,7 @@ public final class FarChunkProbe {
      * @param cameraSectionCenterX camera section origin plus eight, per axis; picks the corner
      *                             of the neighbour the ray starts from
      * @param step                 ray advance per iteration in blocks
-     * @param worldTopYExclusive   one past the highest block, as {@code HeightLimitView.getTopY()}
+     * @param worldTopYExclusive   one past the highest block, as {@code LevelHeightAccessor.getMaxBuildHeight()}
      *                             returns it (320 for the overworld); a point above it or below
      *                             {@code worldBottomY} leaves the world, which passes
      * @param worldBottomY         inclusive bottom of the world
@@ -92,7 +92,7 @@ public final class FarChunkProbe {
                 return true;
             }
             if (!graph.contains(
-                    MathHelper.floor(pointX), MathHelper.floor(pointY), MathHelper.floor(pointZ))) {
+                    Mth.floor(pointX), Mth.floor(pointY), Mth.floor(pointZ))) {
                 return false;
             }
         }

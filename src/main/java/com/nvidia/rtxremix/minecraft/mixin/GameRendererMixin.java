@@ -4,16 +4,16 @@
  */
 package com.nvidia.rtxremix.minecraft.mixin;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.nvidia.rtxremix.minecraft.RemixRenderer;
 import com.nvidia.rtxremix.minecraft.RtxRemixMod;
 import com.nvidia.rtxremix.minecraft.profiling.ProfileScope;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.item.HeldItemRenderer;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Moves the first-person arm/item draw into Remix while preserving Minecraft's
- * own HeldItemRenderer animation and selection logic, brackets the GUI tail
+ * own ItemInHandRenderer animation and selection logic, brackets the GUI tail
  * of its render method with a profiling scope, and has input capture follow
  * the Remix menus at the start of each frame.
  */
@@ -31,21 +31,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class GameRendererMixin {
 
     @Redirect(
-            method = "renderHand",
+            method = "renderItemInHand",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V"
+                    target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderHandsWithItems(FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/player/LocalPlayer;I)V"
             ))
     private void rtxremix$captureFirstPersonModel(
-            HeldItemRenderer heldItemRenderer,
+            ItemInHandRenderer heldItemRenderer,
             float tickDelta,
-            MatrixStack matrices,
-            VertexConsumerProvider.Immediate vertexConsumers,
-            ClientPlayerEntity player,
+            PoseStack matrices,
+            MultiBufferSource.BufferSource vertexConsumers,
+            LocalPlayer player,
             int light) {
         RemixRenderer renderer = RtxRemixMod.renderer;
         if (!RtxRemixMod.shouldCaptureFirstPersonModel()) {
-            heldItemRenderer.renderItem(tickDelta, matrices, vertexConsumers, player, light);
+            heldItemRenderer.renderHandsWithItems(tickDelta, matrices, vertexConsumers, player, light);
             return;
         }
 
@@ -53,10 +53,10 @@ public abstract class GameRendererMixin {
     }
 
     @Inject(
-            method = "renderHand",
+            method = "renderItemInHand",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/hud/InGameOverlayRenderer;renderOverlays(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/util/math/MatrixStack;)V",
+                    target = "Lnet/minecraft/client/renderer/ScreenEffectRenderer;renderScreenEffect(Lnet/minecraft/client/Minecraft;Lcom/mojang/blaze3d/vertex/PoseStack;)V",
                     shift = At.Shift.BEFORE
             ))
     private void rtxremix$submitBeforeScreenOverlays(
@@ -69,11 +69,11 @@ public abstract class GameRendererMixin {
 
     /**
      * Covers third person, sleeping, hidden-hand, panorama, and other paths
-     * where HeldItemRenderer or InGameOverlayRenderer is skipped.
+     * where ItemInHandRenderer or ScreenEffectRenderer is skipped.
      */
-    @Inject(method = "renderWorld", at = @At("TAIL"))
+    @Inject(method = "renderLevel", at = @At("TAIL"))
     private void rtxremix$submitAtRenderWorldTail(
-            RenderTickCounter tickCounter,
+            DeltaTracker tickCounter,
             CallbackInfo ci) {
         RtxRemixMod.submitRemixFrameIfReady();
     }
@@ -81,7 +81,7 @@ public abstract class GameRendererMixin {
     /**
      * The GUI tail of GameRenderer.render, from vanilla's {@code swap("gui")} to
      * the method's return: HUD, in-game screen or overlay, toasts, and the final
-     * DrawContext flush. Vanilla only reaches that swap while a world is loaded,
+     * GuiGraphics flush. Vanilla only reaches that swap while a world is loaded,
      * so menu-only frames have no GUI zone. WorldRender.END accounts for the
      * world half of the frame.
      */
@@ -91,10 +91,10 @@ public abstract class GameRendererMixin {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/util/profiler/Profiler;swap(Ljava/lang/String;)V"
+                    target = "Lnet/minecraft/util/profiling/ProfilerFiller;popPush(Ljava/lang/String;)V"
             ))
     private void rtxremix$beginGuiScope(
-            RenderTickCounter tickCounter,
+            DeltaTracker tickCounter,
             boolean tick,
             CallbackInfo ci) {
         rtxremix$closeGuiScope();
@@ -107,7 +107,7 @@ public abstract class GameRendererMixin {
     /** Before any screen draws, so the frame's hover state already matches input capture. */
     @Inject(method = "render", at = @At("HEAD"))
     private void rtxremix$followRemixMenuVisibility(
-            RenderTickCounter tickCounter,
+            DeltaTracker tickCounter,
             boolean tick,
             CallbackInfo ci) {
         RtxRemixMod.followRemixMenuVisibility();
@@ -115,7 +115,7 @@ public abstract class GameRendererMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void rtxremix$endGuiScope(
-            RenderTickCounter tickCounter,
+            DeltaTracker tickCounter,
             boolean tick,
             CallbackInfo ci) {
         rtxremix$closeGuiScope();

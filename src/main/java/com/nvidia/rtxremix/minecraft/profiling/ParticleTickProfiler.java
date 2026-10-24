@@ -7,7 +7,7 @@ package com.nvidia.rtxremix.minecraft.profiling;
 /**
  * Lightweight aggregate counters for vanilla particle ticking. Per-particle
  * Tracy zones would dominate the benchmark, so the particle mixins record only
- * counts and aggregate collision time for the enclosing ParticleManager phase.
+ * counts and aggregate collision time for the enclosing ParticleEngine phase.
  */
 public final class ParticleTickProfiler {
     private static final ThreadLocal<Stats> STATS = ThreadLocal.withInitial(Stats::new);

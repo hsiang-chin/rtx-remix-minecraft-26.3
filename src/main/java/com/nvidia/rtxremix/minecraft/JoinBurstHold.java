@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
  *
  * <p>The first frames after a join pay Remix's first-sight costs: entity mesh creation,
  * pipeline compiles, first BLAS builds, deferred task flushes. Vanilla closes
- * {@code DownloadingTerrainScreen} as soon as the player's own section has built, which is
+ * {@code ReceivingLevelScreen} as soon as the player's own section has built, which is
  * while that burst is under way, so the player feels the hitches right as they gain control.
  * {@code DownloadingTerrainScreenMixin} begins a hold at vanilla's first close attempt and
  * keeps cancelling the close while {@link #keepScreen(long)} says so.

@@ -37,12 +37,12 @@ import org.junit.jupiter.api.Test;
  */
 class SettingsRowWidthTest {
 
-    /** {@code OptionListWidget} lays out two option widgets of this width per row. */
+    /** {@code OptionsList} lays out two option widgets of this width per row. */
     private static final int OPTION_WIDGET_WIDTH = 150;
     /** Sliders and buttons inset their message by this many pixels on each side. */
     private static final int WIDGET_TEXT_MARGIN = 2;
     private static final int OPTION_TEXT_WIDTH = OPTION_WIDGET_WIDTH - 2 * WIDGET_TEXT_MARGIN;
-    /** The Block Lights table names each row in a {@code TextWidget} of this width. */
+    /** The Block Lights table names each row in a {@code StringWidget} of this width. */
     private static final int BLOCK_LIGHT_NAME_WIDTH = 150;
     /** The landing and category screens pair two footer buttons of this width. */
     private static final int FOOTER_BUTTON_WIDTH = 98;
@@ -56,7 +56,7 @@ class SettingsRowWidthTest {
 
     /**
      * Rows {@code RtxSettingsCategoryScreen.fullWidthRows} lays out one per
-     * line through {@code OptionListWidget.addSingleOptionEntry}, which builds
+     * line through {@code OptionsList.addBig}, which builds
      * the widget at this width.
      */
     private static final int FULL_WIDTH_OPTION_WIDTH = 310;
@@ -192,11 +192,11 @@ class SettingsRowWidthTest {
     }
 
     /**
-     * Advances of Minecraft's default font, computed the way {@code BitmapFont}
+     * Advances of Minecraft's default font, computed the way {@code BitmapProvider}
      * computes them: the rightmost opaque column of a glyph cell plus one pixel
      * of spacing, scaled by the provider's height. Providers are consulted in
      * declaration order and the first that supplies a code point wins, as in
-     * {@code FontStorage}. Only the bitmap providers are loaded, so a string
+     * {@code FontSet}. Only the bitmap providers are loaded, so a string
      * that needs the Unifont fallback fails loudly instead of measuring short.
      */
     private static final class DefaultFont {

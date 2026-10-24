@@ -336,11 +336,11 @@ class NeighbourReflagFilterTest {
     }
 
     /**
-     * Render-thread model of BuiltChunkStorage under either rule. Every column in the storage
+     * Render-thread model of ViewArea under either rule. Every column in the storage
      * has a full stack of resident slots. A slot builds once vanilla's visibility walk has
      * admitted it, its column's light data has arrived, and its four cardinal columns are
      * loaded (shouldBuild); the build snapshots the loaded neighbourhood exactly as
-     * ChunkRendererRegionBuilder does.
+     * RenderRegionCache does.
      */
     private static final class StorageModel {
         static final int FRONTIER_ROW = 1;
@@ -405,7 +405,7 @@ class NeighbourReflagFilterTest {
         }
 
         /**
-         * The deferred chunk runnable: light data enables the column, then scheduleBlockRenders(III)
+         * The deferred chunk runnable: light data enables the column, then setSectionDirtyWithNeighbors(III)
          * per section. The client issues that request once per light type and once more with the
          * chunk data, so its dropped count runs two to three times the per-section count modelled here.
          */
@@ -467,7 +467,7 @@ class NeighbourReflagFilterTest {
             }
         }
 
-        /** WorldRenderer.updateChunks: createRebuildTask for every admitted slot that needs one, then the frame ends. */
+        /** LevelRenderer.compileSections: createRebuildTask for every admitted slot that needs one, then the frame ends. */
         void updateChunks() {
             for (Map.Entry<Column, Slot[]> entry : storage.entrySet()) {
                 Column column = entry.getKey();
