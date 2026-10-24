@@ -1,0 +1,58 @@
+name: Port task
+description: A scoped piece of the Minecraft 26.3 port, written so one person or agent can finish it alone.
+labels: ["port-26.3"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For work tracked under the 26.3 port umbrella issue. The reader may
+        be an agent that cannot see any earlier discussion, so everything it
+        needs must be in this issue or in the repository.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What is true when this task is done, in one or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Files and scope
+      description: >-
+        The files or packages to change, and what is out of scope. Two people
+        must not edit the same files.
+      placeholder: |
+        - src/main/java/.../input/
+        - Out of scope: terrain capture
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable conditions that decide whether the task is done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: How to verify
+      description: >-
+        Commands to run. A change to rendering or a mixin also needs a launch
+        with `tools\rtx.bat launch`, and a screenshot or log in the pull
+        request.
+      placeholder: |
+        .\gradlew.bat build test
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Links to the umbrella issue, related issues, and the sources that matter.
