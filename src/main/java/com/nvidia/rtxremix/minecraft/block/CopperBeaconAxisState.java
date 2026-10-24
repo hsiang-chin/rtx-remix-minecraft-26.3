@@ -113,24 +113,24 @@ public record CopperBeaconAxisState(
     }
 
     public static CopperBeaconAxisState readNbt(CompoundTag nbt) {
-        CopperBeaconAxisState defaults = defaults(nbt.getLong(ANCHOR_TICK_KEY));
+        CopperBeaconAxisState defaults = defaults(nbt.getLongOr(ANCHOR_TICK_KEY, 0L));
         return new CopperBeaconAxisState(
-                nbt.contains(POSITION_KEY) ? nbt.getFloat(POSITION_KEY) : defaults.position,
-                CopperBeaconAnimationMode.byId(nbt.getInt(MODE_KEY)),
+                nbt.contains(POSITION_KEY) ? nbt.getFloatOr(POSITION_KEY, 0.0f) : defaults.position,
+                CopperBeaconAnimationMode.byId(nbt.getIntOr(MODE_KEY, 0)),
                 nbt.contains(ROTATION_SPEED_KEY)
-                        ? nbt.getFloat(ROTATION_SPEED_KEY)
+                        ? nbt.getFloatOr(ROTATION_SPEED_KEY, 0.0f)
                         : defaults.rotationSpeed,
                 nbt.contains(MINIMUM_OFFSET_KEY)
-                        ? nbt.getFloat(MINIMUM_OFFSET_KEY)
+                        ? nbt.getFloatOr(MINIMUM_OFFSET_KEY, 0.0f)
                         : defaults.minimumOffset,
                 nbt.contains(MAXIMUM_OFFSET_KEY)
-                        ? nbt.getFloat(MAXIMUM_OFFSET_KEY)
+                        ? nbt.getFloatOr(MAXIMUM_OFFSET_KEY, 0.0f)
                         : defaults.maximumOffset,
                 nbt.contains(CYCLE_SECONDS_KEY)
-                        ? nbt.getFloat(CYCLE_SECONDS_KEY)
+                        ? nbt.getFloatOr(CYCLE_SECONDS_KEY, 0.0f)
                         : defaults.cycleSeconds,
                 nbt.contains(PATROL_SECONDS_KEY)
-                        ? nbt.getFloat(PATROL_SECONDS_KEY)
+                        ? nbt.getFloatOr(PATROL_SECONDS_KEY, 0.0f)
                         : defaults.patrolSeconds,
                 defaults.anchorTick);
     }

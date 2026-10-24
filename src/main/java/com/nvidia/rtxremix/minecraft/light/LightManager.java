@@ -409,7 +409,7 @@ public class LightManager {
 
         firstPersonShadowModelOffset = shadowModelPlacement.resolve(
                 world, camera, player, constraints, frameDtSeconds);
-        Vec3 displacedHeadCenter = camera.getPosition().add(firstPersonShadowModelOffset);
+        Vec3 displacedHeadCenter = camera.position().add(firstPersonShadowModelOffset);
 
         // The rig lights surfaces but never the air. A first-person emitter is
         // locked to the camera, and the volumetric grid reuses the previous

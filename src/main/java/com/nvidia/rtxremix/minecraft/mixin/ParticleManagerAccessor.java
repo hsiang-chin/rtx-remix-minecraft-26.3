@@ -4,26 +4,21 @@
  */
 package com.nvidia.rtxremix.minecraft.mixin;
 
-import net.minecraft.client.particle.Particle;
+import net.minecraft.client.particle.ParticleGroup;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.ParticleRenderType;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.particle.ParticleResources;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
-import java.util.Queue;
 
 @Mixin(ParticleEngine.class)
 public interface ParticleManagerAccessor {
     @Accessor("particles")
-    Map<ParticleRenderType, Queue<Particle>> getParticles();
+    Map<ParticleRenderType, ParticleGroup<?>> getParticles();
 
-    /**
-     * Sprite providers keyed by particle type id. The value class is package
-     * private in vanilla, so callers read it through the public
-     * {@code SpriteSet} interface it implements.
-     */
-    @Accessor("spriteSets")
-    Map<ResourceLocation, ?> getSpriteAwareFactories();
+    /** Owner of the sprite providers; see {@link ParticleResourcesAccessor}. */
+    @Accessor("resourceManager")
+    ParticleResources getResources();
 }

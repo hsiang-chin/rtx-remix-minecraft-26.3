@@ -26,6 +26,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nvidia.rtxremix.minecraft.RtxRemixMod;
 import com.nvidia.rtxremix.minecraft.mixin.ParticleManagerAccessor;
+import com.nvidia.rtxremix.minecraft.mixin.ParticleResourcesAccessor;
 import org.joml.Matrix4f;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -101,9 +102,9 @@ public final class HeldItemEffectsRenderer {
         SpriteSet smokeSprites = spriteProvider(client, ParticleTypes.SMOKE);
         if (flameSprites == null || smokeSprites == null) return;
 
-        Quaternionfc facing = client.gameRenderer.getMainCamera().rotation();
+        Quaternionfc facing = client.gameRenderer.mainCamera().rotation();
         Quaternionfc frame = HeldItemFlame.riseFrame(mode, facing);
-        double ticks = client.level.getGameTime() + client.getTimer().getGameTimeDeltaPartialTick(false);
+        double ticks = client.level.getGameTime() + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         float phase = mode.ordinal();
         float cameraOffset = HeldItemFlame.cameraOffset(mode);
         // Null when the capture does not know where the eye is; the poses then stay at depth 1.
@@ -144,8 +145,9 @@ public final class HeldItemEffectsRenderer {
     }
 
     private static SpriteSet spriteProvider(Minecraft client, ParticleType<?> particle) {
-        Object provider = ((ParticleManagerAccessor) client.particleEngine)
-                .getSpriteAwareFactories()
+        Object provider = ((ParticleResourcesAccessor) ((ParticleManagerAccessor) client.particleEngine)
+                .getResources())
+                .getSpriteSets()
                 .get(BuiltInRegistries.PARTICLE_TYPE.getKey(particle));
         return provider instanceof SpriteSet spriteProvider ? spriteProvider : null;
     }

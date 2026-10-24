@@ -61,9 +61,10 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.FogType;
 import net.minecraft.world.phys.Vec3;
-import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.sdl.SDLProperties;
+import org.lwjgl.sdl.SDLVideo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,9 +228,9 @@ public class RemixRenderer {
             lastCameraMediumHandle = Long.MIN_VALUE;
 
             Minecraft client = Minecraft.getInstance();
-            long glfwHandle = client.getWindow().getWindow();
+            long sdlWindow = client.getWindow().handle();
             
-            windowHandle = getHwndFromGlfw(glfwHandle);
+            windowHandle = getHwndFromSdl(sdlWindow);
             
             if (windowHandle == 0) {
                 throw new RuntimeException("Failed to get native window handle");
@@ -273,14 +274,14 @@ public class RemixRenderer {
             // RTXREMIX_WINDOW_POS="x,y" moves the window before startup() so the
             // swapchain is created on the monitor that will display it (benchmarks
             // use this to target a specific monitor, e.g. a 4K panel at a negative
-            // desktop coordinate). Must run on the render thread, which owns GLFW.
+            // desktop coordinate). Must run on the render thread, which owns the window.
             String windowPos = System.getenv("RTXREMIX_WINDOW_POS");
             if (windowPos != null && !windowPos.isBlank()) {
                 String[] parts = windowPos.split(",");
                 try {
                     int x = Integer.parseInt(parts[0].trim());
                     int y = Integer.parseInt(parts[1].trim());
-                    org.lwjgl.glfw.GLFW.glfwSetWindowPos(glfwHandle, x, y);
+                    SDLVideo.SDL_SetWindowPosition(sdlWindow, x, y);
                     LOGGER.info("RTXREMIX_WINDOW_POS: moved window to ({}, {})", x, y);
                 } catch (RuntimeException e) {
                     LOGGER.warn("RTXREMIX_WINDOW_POS: could not apply '{}': {}", windowPos, e.getMessage());
@@ -496,10 +497,13 @@ public class RemixRenderer {
     }
     
     /**
-     * Gets the Win32 HWND from a GLFW window handle.
+     * Gets the Win32 HWND from an SDL window handle.
      */
-    private long getHwndFromGlfw(long glfwHandle) {
-        return GLFWNativeWin32.glfwGetWin32Window(glfwHandle);
+    private long getHwndFromSdl(long sdlWindow) {
+        return SDLProperties.SDL_GetPointerProperty(
+                SDLVideo.SDL_GetWindowProperties(sdlWindow),
+                SDLVideo.SDL_PROP_WINDOW_WIN32_HWND_POINTER,
+                0L);
     }
     
     /**
@@ -784,8 +788,8 @@ public class RemixRenderer {
             }
             submitPendingParticleFrame();
 
-            Camera camera = client.gameRenderer.getMainCamera();
-            float tickDelta = client.getTimer().getGameTimeDeltaPartialTick(true);
+            Camera camera = client.gameRenderer.mainCamera();
+            float tickDelta = client.getDeltaTracker().getGameTimeDeltaPartialTick(true);
             particleFuture = startParticleRenderTask(tickDelta, ProfileScope.currentFrameIndex());
             
             perfTimer.begin(perfCamera);
@@ -795,7 +799,7 @@ public class RemixRenderer {
                 perfTimer.end(perfCamera);
             }
             
-            Vec3 cameraPos = camera.getPosition();
+            Vec3 cameraPos = camera.position();
 
             perfTimer.begin(perfLights);
             try (ProfileScope lightsScope = ProfileScope.begin("Lights")) {
@@ -1189,9 +1193,9 @@ public class RemixRenderer {
      */
     private void updateCamera(Camera camera, float tickDelta) {
         try {
-            Vec3 pos = camera.getPosition();
-            float pitch = camera.getXRot();
-            float yaw = camera.getYRot();
+            Vec3 pos = camera.position();
+            float pitch = camera.xRot();
+            float yaw = camera.yRot();
     
             float yawRad = (float) Math.toRadians(-yaw);
             float pitchRad = (float) Math.toRadians(pitch);
@@ -1209,7 +1213,7 @@ public class RemixRenderer {
             float upZ = rightX * forwardY - rightY * forwardX;
     
             Minecraft client = Minecraft.getInstance();
-            float worldFov = (float) client.gameRenderer.getFov(camera, tickDelta, true);
+            float worldFov = camera.getFov();
             int width = client.getWindow().getWidth();
             int height = client.getWindow().getHeight();
             float aspect = (float) width / (float) height;
@@ -1323,7 +1327,7 @@ public class RemixRenderer {
     
     /**
      * Presents the frame through Remix, which owns the swapchain for as long as the
-     * renderer is initialized: this method replaces the GLFW buffer swap, so returning
+     * renderer is initialized: this method replaces the window buffer swap, so returning
      * without calling present leaves the window frozen on the last presented image.
      * A failed GL-to-Remix copy therefore still presents, and a failure is logged once
      * per run rather than once per frame.
@@ -1571,7 +1575,7 @@ public class RemixRenderer {
     }
 
     /**
-     * Completes native runtime shutdown after Minecraft has destroyed its GLFW window.
+     * Completes native runtime shutdown after Minecraft has destroyed its window.
      */
     public void shutdownNativeRuntime() {
         shutdownRemixApi();

@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
@@ -49,8 +49,8 @@ final class BlockLightDefaults {
 
     private BlockLightDefaults() {}
 
-    static Map<ResourceLocation, BlockLightRuleManager.Rule> create() {
-        LinkedHashMap<ResourceLocation, BlockLightRuleManager.Rule> rules = new LinkedHashMap<>();
+    static Map<Identifier, BlockLightRuleManager.Rule> create() {
+        LinkedHashMap<Identifier, BlockLightRuleManager.Rule> rules = new LinkedHashMap<>();
         // Built as locals, not static fields: a static field touching Blocks
         // would force the block registry to bootstrap just to load this class,
         // even for a caller that only wants a constant such as TORCH_COLOR.
@@ -100,24 +100,24 @@ final class BlockLightDefaults {
         return Collections.unmodifiableMap(new LinkedHashMap<>(rules));
     }
 
-    private static void add(Map<ResourceLocation, BlockLightRuleManager.Rule> rules,
+    private static void add(Map<Identifier, BlockLightRuleManager.Rule> rules,
                             String path,
                             Predicate<BlockState> matcher,
                             BlockLightRuleManager.Resolver resolver) {
         add(rules, path, matcher, resolver, DEFAULT_AUTHORED_INTENSITY_MULTIPLIER);
     }
 
-    private static void add(Map<ResourceLocation, BlockLightRuleManager.Rule> rules,
+    private static void add(Map<Identifier, BlockLightRuleManager.Rule> rules,
                             String path,
                             Predicate<BlockState> matcher,
                             BlockLightRuleManager.Resolver resolver,
                             float authoredIntensityMultiplier) {
-        ResourceLocation id = BlockLightRuleIds.builtIn(path);
+        Identifier id = BlockLightRuleIds.builtIn(path);
         add(rules, id, matcher, resolver, authoredIntensityMultiplier);
     }
 
-    private static void add(Map<ResourceLocation, BlockLightRuleManager.Rule> rules,
-                            ResourceLocation id,
+    private static void add(Map<Identifier, BlockLightRuleManager.Rule> rules,
+                            Identifier id,
                             Predicate<BlockState> matcher,
                             BlockLightRuleManager.Resolver resolver,
                             float authoredIntensityMultiplier) {
@@ -136,13 +136,13 @@ final class BlockLightDefaults {
         return state -> state.is(block);
     }
 
-    private static LightEntry sphere(ResourceLocation id, int index, BlockState state, BlockPos pos,
+    private static LightEntry sphere(Identifier id, int index, BlockState state, BlockPos pos,
                                      float x, float y, float z, float radius,
                                      LightEntry.ColorOverride color, Float intensity) {
         return BlockLightRuleManager.sphere(id, index, state, pos, x, y, z, radius, color, intensity);
     }
 
-    private static LightEntry thinSphere(ResourceLocation id, int index, BlockState state, BlockPos pos,
+    private static LightEntry thinSphere(Identifier id, int index, BlockState state, BlockPos pos,
                                          float x, float y, float z, float radius,
                                          LightEntry.ColorOverride color) {
         float intensity = state.getLightEmission()
@@ -151,7 +151,7 @@ final class BlockLightDefaults {
         return sphere(id, index, state, pos, x, y, z, radius * THIN_SPHERE_RADIUS_SCALE, color, intensity);
     }
 
-    private static LightEntry wallTorch(ResourceLocation id, BlockState state, BlockPos pos,
+    private static LightEntry wallTorch(Identifier id, BlockState state, BlockPos pos,
                                         LightEntry.ColorOverride color) {
         Direction facing = state.getValue(WallTorchBlock.FACING).getOpposite();
         return thinSphere(id, 0, state, pos,
@@ -161,14 +161,14 @@ final class BlockLightDefaults {
                 0.2f, color);
     }
 
-    private static LightEntry endRod(ResourceLocation id, BlockState state, BlockPos pos) {
+    private static LightEntry endRod(Identifier id, BlockState state, BlockPos pos) {
         Direction facing = state.getValue(BlockStateProperties.FACING);
         BlockLightRuleManager.Vec3 axis = BlockLightRuleManager.Vec3.fromAxis(facing.getAxis());
         return BlockLightRuleManager.cylinder(id, 0, state, pos,
                 0.5f, 0.5f, 0.5f, 0.125f, axis, 1.0f, null, null);
     }
 
-    private static LightEntry amethystCrystal(ResourceLocation id, BlockState state, BlockPos pos,
+    private static LightEntry amethystCrystal(Identifier id, BlockState state, BlockPos pos,
                                               float heightPixels, float radius, int lightLevel) {
         Direction facing = state.getValue(BlockStateProperties.FACING);
         float halfHeight = heightPixels / 32.0f;
@@ -183,7 +183,7 @@ final class BlockLightDefaults {
                 radius, AMETHYST_COLOR, intensity);
     }
 
-    private static List<LightEntry> candles(ResourceLocation id, BlockState state, BlockPos pos,
+    private static List<LightEntry> candles(Identifier id, BlockState state, BlockPos pos,
                                             BlockLightRuleManager.ModelSampler centroid) {
         List<LightEntry> entries = new ArrayList<>(state.getValue(CandleBlock.CANDLES));
         float[][] offsets = candleOffsets(state.getValue(CandleBlock.CANDLES));

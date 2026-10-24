@@ -47,7 +47,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -72,10 +72,10 @@ public class SkyRenderer {
     private static final float OVERCAST_MEAN_G = 0.26890025f;
     private static final float OVERCAST_MEAN_B = 0.31064802f;
     private static final float WEATHER_UPDATE_DELTA = 1.0e-4f;
-    private static final ResourceLocation SUN_TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/environment/sun.png");
-    private static final ResourceLocation MOON_PHASES_TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/environment/moon_phases.png");
+    private static final Identifier SUN_TEXTURE =
+            Identifier.withDefaultNamespace("textures/environment/sun.png");
+    private static final Identifier MOON_PHASES_TEXTURE =
+            Identifier.withDefaultNamespace("textures/environment/moon_phases.png");
     private static final float CELESTIAL_DISTANCE = 100.0f;
     private static final float SUN_HALF_SIZE = 30.0f;
     private static final float MOON_HALF_SIZE = 20.0f;
@@ -665,7 +665,7 @@ public class SkyRenderer {
         }
     }
 
-    private RemixTexture loadCelestialTexture(ResourceLocation textureId) throws IOException {
+    private RemixTexture loadCelestialTexture(Identifier textureId) throws IOException {
         var client = Minecraft.getInstance();
         var resource = client.getResourceManager().getResource(textureId)
                 .orElseThrow(() -> new IOException("Missing texture " + textureId));
@@ -679,7 +679,7 @@ public class SkyRenderer {
             pixels = new byte[width * height * 4];
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
-                    int abgr = image.getPixelRGBA(x, y);
+                    int abgr = image.getPixelABGR(x, y);
                     int index = (y * width + x) * 4;
                     pixels[index] = (byte) (abgr & 0xFF);
                     pixels[index + 1] = (byte) ((abgr >>> 8) & 0xFF);

@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import net.minecraft.client.CloudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -48,8 +48,8 @@ import net.minecraft.world.phys.Vec3;
  * instead of publishing a mesh into the wrong scene.
  */
 public final class CloudRenderer {
-    private static final ResourceLocation VANILLA_CLOUD_TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/environment/clouds.png");
+    private static final Identifier VANILLA_CLOUD_TEXTURE =
+            Identifier.withDefaultNamespace("textures/environment/clouds.png");
     static final int PALETTE_SIZE = 32;
     static final long PALETTE_SEED = 0x434C_4F55_4450_5546L;
     private static final long MAINTENANCE_INTERVAL_TICKS = 40L;
@@ -391,7 +391,7 @@ public final class CloudRenderer {
                 for (int y = 0; y < vanillaTextureHeight; y++) {
                     for (int x = 0; x < vanillaTextureWidth; x++) {
                         vanillaOccupancy[y * vanillaTextureWidth + x] =
-                                ((image.getPixelRGBA(x, y) >>> 24) & 0xff) >= 128;
+                                ((image.getPixelABGR(x, y) >>> 24) & 0xff) >= 128;
                     }
                 }
             }
