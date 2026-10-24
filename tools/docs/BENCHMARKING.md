@@ -301,7 +301,7 @@ the measured traversal. The benchmark package config currently selects five
 (start, end, three interior); the config, not this example, owns the default.
 `screenshots.frames` adds explicit zero-based measured frame indices, which are
 not camera waypoint durations. Captures go through Minecraft's
-`ScreenshotRecorder` after the render frame completes, so they are the real
+`Screenshot` after the render frame completes, so they are the real
 client framebuffer rather than a desktop grab.
 
 ### Documentation Screenshots
