@@ -22,7 +22,7 @@ must release the previous session before acquiring the next one, as the zone
 registry clear and `ConfLayerDriver.onWorldJoin` do.
 
 Schedule transition work through the client executor and re-check the session
-when it runs. A flag drained from `WorldRenderEvents` or the submit hook will
+when it runs. A flag drained from `LevelRenderEvents` or the submit hook will
 not drain while the world is null. It can instead clear native resources in
 the first frame of the next world, during their reinitialization.
 

@@ -4,7 +4,6 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
 import static com.nvidia.rtxremix.minecraft.entity.RemixEntitySubmitter.SHELL_OFFSET;

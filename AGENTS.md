@@ -4,12 +4,20 @@ Context for AI coding agents working in this repository.
 
 ## Project Overview
 
-`rtx-remix-minecraft` is a Fabric mod that renders Minecraft 1.21.1 through
+`rtx-remix-minecraft` is a Fabric mod that renders Minecraft 26.3 through
 NVIDIA RTX Remix. It captures terrain, entities, particles, sky, and clouds from
 the client and submits them to the Remix runtime as a path-traced scene. The
 Java facade and JNI bridge are tracked under `rtxremix-java/`; the native
 runtime and the Remix C API come from dxvk-remix. A change often spans all
 three layers.
+
+The port from Minecraft 1.21.1 to 26.3 is in progress. Until it lands, the
+mixins, the access widener entries that do not resolve on 26.3, and the
+terrain capture classes written against the removed Fabric Renderer API sit
+under `port-parked/`, outside the compiled source set, so the Architecture
+section below describes the target design rather than what a build does today.
+Code that cannot work on 26.3 yet is stubbed with a comment that carries the
+`port-26.3` tag and names the subsystem that owns the follow-up.
 
 ## Source Of Truth
 
@@ -27,7 +35,7 @@ subdirectory may carry its own `AGENTS.md`; read the nearest one as well.
 
 ## Build, Run, Package, Test
 
-Java 21, Windows, and the C++ toolchain are required. Gradle fetches a missing
+Java 25, Windows, and the C++ toolchain are required. Gradle fetches a missing
 Remix runtime automatically. [Getting Started](docs/GETTING_STARTED.md) covers local overrides.
 
 ```powershell
@@ -100,7 +108,7 @@ for stable frames after a world join, hiding first-sight mesh, pipeline, and
 BLAS costs without holding the screen indefinitely.
 
 **Overlay input.** `RemixInputGate` owns the Minecraft-side capture session for
-the Remix overlays; `KeyboardMixin` and `MouseMixin` route GLFW input through
+the Remix overlays; `KeyboardMixin` and `MouseMixin` route window (SDL) input through
 it. Capture follows whether a native menu is shown, which `rtx.showUI` records:
 `GameRendererMixin` has the gate read it through `GetConfigVariableResolved` at
 the start of every frame. The mod opens and closes menus by writing it, and the
@@ -369,7 +377,7 @@ The wrapper's source of truth, in order, is:
 The root Gradle build compiles the Java sources directly and builds
 `remixbridge.dll` into `build/native/{win64|arm64}/`. There is no separate
 wrapper Java build or example launcher. The native build needs Visual Studio
-C++ tools and `JAVA_HOME` pointing to a 64-bit JDK 21. It uses the
+C++ tools and `JAVA_HOME` pointing to a 64-bit JDK 25. It uses the
 copied header unless `REMIX_INCLUDE` explicitly selects another directory.
 The supported targets are Windows x64 and ARM64; agent shells may be POSIX
 even though the Gradle wrapper and native compiler entry points are batch scripts.
