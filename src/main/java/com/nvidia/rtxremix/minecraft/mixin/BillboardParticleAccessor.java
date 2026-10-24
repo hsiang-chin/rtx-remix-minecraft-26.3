@@ -14,6 +14,14 @@ public interface BillboardParticleAccessor {
     @Accessor("quadSize")
     float getScale();
 
+    // The tint and roll fields moved from Particle down to SingleQuadParticle in 26.3.
+    @Accessor("rCol") float getRed();
+    @Accessor("gCol") float getGreen();
+    @Accessor("bCol") float getBlue();
+    @Accessor("alpha") float getAlpha();
+    @Accessor("roll") float getAngle();
+    @Accessor("oRoll") float getPrevAngle();
+
     @Invoker("getLayer")
     SingleQuadParticle.Layer invokeGetLayer();
 

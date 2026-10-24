@@ -45,7 +45,7 @@ public final class ZonePersistentState extends SavedData {
     private static final String SPHERE_SHAPE = "sphere";
     private static final String BOX_SHAPE = "box";
 
-    private static final SavedDataType<ZonePersistentState> TYPE = new SavedDataType<>(
+    static final SavedDataType<ZonePersistentState> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath(RtxRemixCommonMod.MOD_ID, DATA_ID),
             ZonePersistentState::new,
             CompoundTag.CODEC.xmap(ZonePersistentState::fromNbt, ZonePersistentState::save),
