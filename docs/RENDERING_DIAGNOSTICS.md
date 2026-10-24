@@ -31,7 +31,7 @@ the first frame of the next world, during their reinitialization.
 `RtxRemixMod.rebuildLoadedTerrain()` owns the full recapture sequence:
 
 1. Clear the Remix terrain through `ChunkManager.clear()`.
-2. Snapshot `builtSections(client)` before `WorldRenderer.reload()` forgets
+2. Snapshot `builtSections(client)` before `LevelRenderer.allChanged()` forgets
    the old section slots, then reload vanilla terrain.
 3. Call `recaptureTerrainForRemix(client, built)` to explicitly queue that set.
 

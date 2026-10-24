@@ -110,7 +110,7 @@ class HierarchicalFrustumCullerTest {
     @Test
     void reAddingAnIndexedEntryMovesItInsteadOfDuplicatingIt() {
         // Vanilla's reached-section set can hand the same re-originned section to the index
-        // again, because the section's ChunkInfo hashes by its now-changed origin.
+        // again, because the section's Node hashes by its now-changed origin.
         HierarchicalFrustumCuller<MovableEntry> culler = new HierarchicalFrustumCuller<>();
         MovableEntry mover = new MovableEntry(0, 0, 0, 0);
         add(culler, mover);

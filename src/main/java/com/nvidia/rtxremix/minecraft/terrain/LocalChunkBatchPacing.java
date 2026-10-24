@@ -20,10 +20,10 @@ import java.util.function.ToLongFunction;
 /**
  * Paces the integrated server's chunk delivery to the local client.
  *
- * <p>Vanilla's {@code ChunkDataSender} treats a local connection as free: every
+ * <p>Vanilla's {@code PlayerChunkSender} treats a local connection as free: every
  * chunk pending for the player goes out in one batch each tick, and the rate the
  * client requests is ignored. The client applies a batch in a single
- * {@code MinecraftClient.runTasks} drain on the render thread, so a chunk-boundary
+ * {@code Minecraft.runAllTasks} drain on the render thread, so a chunk-boundary
  * crossing at render distance 32 lands a 65-column row (and world join the whole
  * disc) in one frame: the deserialization alone is several milliseconds, and the
  * section rebuilds and Remix captures it triggers arrive as one wave over the
@@ -31,7 +31,7 @@ import java.util.function.ToLongFunction;
  * per tick.
  *
  * <p>The batch is sized from what a chunk actually costs the render thread to
- * apply, measured around {@code ClientChunkManager.loadChunkFromPacket} and kept
+ * apply, measured around {@code ClientChunkCache.replaceWithPacketData} and kept
  * as a moving average. Vanilla's own request ({@code ChunkBatchSizeCalculator})
  * cannot serve here: on a local connection it times the netty thread's dispatch
  * of the burst, not the apply, so it saturates at the 64 clamp on any machine.
@@ -53,7 +53,7 @@ import java.util.function.ToLongFunction;
  * in sustained flight the pending set grows until its share exceeds the floor,
  * so the rate rises with the backlog rather than falling behind at a fixed cap.
  *
- * <p>Unloads are paced the same way. Vanilla writes an {@code UnloadChunkS2CPacket}
+ * <p>Unloads are paced the same way. Vanilla writes an {@code ClientboundForgetLevelChunkPacket}
  * the moment a column leaves the player's chunk filter, so a crossing lands the
  * trailing row's 65 unloads in the same client drain as the chunk data. The sender
  * queues them ({@link PacedUnloadQueue}) and drains the queue once per tick under a
@@ -197,7 +197,7 @@ public final class LocalChunkBatchPacing {
     /**
      * The radius of the client's chunk ring at a server view distance: the client keeps
      * columns up to this chebyshev distance from its centre and ignores an unload for
-     * any column beyond it. Mirrors {@code ClientChunkManager.getChunkMapRadius}.
+     * any column beyond it. Mirrors {@code ClientChunkCache.calculateStorageRange}.
      */
     public static int clientRingRadius(int serverViewDistance) {
         return Math.max(2, serverViewDistance) + 3;

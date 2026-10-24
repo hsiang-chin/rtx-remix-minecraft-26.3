@@ -68,7 +68,7 @@ the change never reaches the scene.
 
 **A mixin that cancels vanilla work inherits its side effects.** Preserve the
 net GL, fog, lightmap and framebuffer state the caller expects, not only the
-entry calls. Never cancel `WorldRenderer.render()` itself: that traversal
+entry calls. Never cancel `LevelRenderer.renderLevel()` itself: that traversal
 hosts Remix's frame. See [Cancelling Vanilla Render Work](#cancelling-vanilla-render-work).
 
 **Only mixins live in the mixin package.** Mixin reserves that package, and a
@@ -194,16 +194,16 @@ must leave the net state its caller expects. Stale GL state can slow
 Disassemble both ends of the target with `javap -p -c` before changing it.
 
 At entry, look for callbacks, `RenderSystem` calls,
-`LightmapTextureManager.enable()`, and `Framebuffer.beginWrite`.
+`LightTexture.turnOnLightLayer()`, and `RenderTarget.bindWrite`.
 `renderSky` calls its fog-setup `Runnable` immediately. At return, look for
-cleanup: `ParticleManager.renderParticles` enables the lightmap and depth
+cleanup: `ParticleEngine.render` enables the lightmap and depth
 test, then ends with `depthMask(true)`, `disableBlend()`, and lightmap disable.
-Replay the net change, not just the entry. `renderLayer` pairs
-`startDrawing()` with `endDrawing()`, so skipping it is state-neutral while
+Replay the net change, not just the entry. `renderSectionLayer` pairs
+`setupRenderState()` with `clearRenderState()`, so skipping it is state-neutral while
 replaying only its entry would not be.
 
 A pure read or early-return guard needs no replay. In Minecraft 1.21.1,
-`renderClouds` returns for a dimension without cloud height, `renderWeather`
+`renderClouds` returns for a dimension without cloud height, `renderSnowAndRain`
 returns without rain, and `renderEntity` starts with position interpolation.
 Check the pinned Minecraft version rather than treating these examples as
 permanent contracts.
@@ -217,19 +217,23 @@ real render-thread saving.
 
 ### Reading Vanilla Bytecode
 
-The Yarn-named merged JAR Loom already caches is enough for `javap`; generating
-all decompiled sources is not necessary. Read the mappings coordinate in
-`build.gradle` and select its exact cache directory. Old versions remain in
-the cache after a mappings bump. The sibling
+The Mojang-named merged JAR Loom already caches is enough for `javap`;
+generating all decompiled sources is not necessary. The mappings are
+`loom.officialMojangMappings()` in `build.gradle`, so the cache directory is
+named `<minecraft-version>-loom.mappings.<minecraft-version>.layered+hash.<n>-v2`.
+Old directories remain in the cache after a Minecraft or Loom change, so select
+the most recently modified one. The sibling
 `~/.gradle/caches/fabric-loom/<minecraft-version>/minecraft-merged.jar` is the
-obfuscated merge, not the Yarn-named one.
+obfuscated merge, not the Mojang-named one. Lambdas have no Mojang name and
+keep their intermediary `method_NNNNN` name in this JAR, which is also how
+`ChunkRenderingDataPreparerMixin` targets one.
 
-For the currently pinned mapping, a Git Bash example is:
+A Git Bash example, with the directory name filled in from the cache, is:
 
 ```bash
 merged=~/.gradle/caches/fabric-loom/minecraftMaven/net/minecraft/minecraft-merged
-version=1.21.1-net.fabricmc.yarn.1_21_1.1.21.1+build.3-v2
-javap -p -c -classpath "$merged/$version/minecraft-merged-$version.jar" net.minecraft.client.render.VertexConsumer
+version=1.21.1-loom.mappings.1_21_1.layered+hash.2198-v2
+javap -p -c -classpath "$merged/$version/minecraft-merged-$version.jar" com.mojang.blaze3d.vertex.VertexConsumer
 ```
 
 If you need to search all callers of a descriptor, extract the whole JAR into
@@ -242,7 +246,7 @@ the extraction afterwards. Do not leave thousands of class files in the tree.
 
 `Mixing X from ... into net.minecraft...` in `run/logs/debug.log` proves
 registration, not an applied injection or an executed target. The check reads
-Loom's Yarn-named development client, which `runClient`, Fabric's standard
+Loom's Mojang-named development client, which `runClient`, Fabric's standard
 Gradle task, starts from `run/`. Temporarily add `-Dmixin.debug.export=true` to
 the client `vmArgs` in `build.gradle`, launch `runClient`, and disassemble the
 transformed class under
@@ -254,7 +258,7 @@ An `@Inject` merges a `handler$<id>$rtx-remix-renderer$<handler name>` method
 and a call at the intended offset: `invokespecial` for a private instance
 handler, `invokestatic` for a static one. If the call is present but does not
 fire, investigate vanilla's frustum, dimension, cloud-mode and weather gates.
-Exports and the classes loaded from `build/classes/` use Yarn names. The
+Exports and the classes loaded from `build/classes/` use Mojang names. The
 remapped JAR in `build/libs/` instead embeds intermediary `method_NNNNN` names
 in injection annotations. Remove the diagnostic flag and export afterwards.
 
@@ -333,7 +337,7 @@ local runtime. Keep the shipped `packaging/rtx.conf` matched to the runtime too.
 while a client from the checkout is still running.
 
 F1 hides the first-person hand as well as the HUD. Vanilla skips
-`HeldItemRenderer.renderItem` when the HUD is hidden, and Remix captures from
+`ItemInHandRenderer.renderItem` when the HUD is hidden, and Remix captures from
 that call. Do not use F1 for a hand or held-item comparison. To avoid chat text,
 wait eleven seconds after the last command, beyond its ten-second fade.
 

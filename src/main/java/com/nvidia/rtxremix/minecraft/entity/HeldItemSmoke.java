@@ -4,7 +4,7 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import net.minecraft.client.render.model.json.ModelTransformationMode;
+import net.minecraft.world.item.ItemDisplayContext;
 import org.joml.Matrix4f;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -14,7 +14,7 @@ import org.joml.Vector3fc;
  * The smoke a held lit item gives off, mirroring the SMOKE particle a placed
  * torch spawns from the same display tick as its flame.
  *
- * <p>Vanilla's puff is a {@code FireSmokeParticle}: a dark speck that
+ * <p>Vanilla's puff is a {@code SmokeParticle}: a dark speck that
  * appears at the flame anchor with a small random velocity, accelerates
  * upward under negative gravity against drag, and dissolves by stepping
  * through eight sprites over an 8 to 40 tick life. A torch within a few blocks
@@ -51,13 +51,13 @@ final class HeldItemSmoke {
     static final int MIN_LIFETIME_TICKS = 8;
     static final int MAX_LIFETIME_TICKS = 16;
 
-    // FireSmokeParticle through AscendingParticle and Particle.
+    // SmokeParticle through BaseAshSmokeParticle and Particle.
     static final float DRAG_PER_TICK = 0.96f;
     /** {@code -0.04 * gravityStrength} with gravity -0.1: the puff accelerates upward. */
     static final float RISE_PER_TICK = 0.004f;
-    /** AscendingParticle scales the base particle's random velocity by this. */
+    /** BaseAshSmokeParticle scales the base particle's random velocity by this. */
     static final float VELOCITY_MULTIPLIER = 0.1f;
-    /** Billboard scale 0.1 to 0.2, times AscendingParticle's 0.75. */
+    /** Billboard scale 0.1 to 0.2, times BaseAshSmokeParticle's 0.75. */
     static final float MIN_HALF_EXTENT = 0.075f;
     static final float MAX_HALF_EXTENT = 0.15f;
     /**
@@ -93,8 +93,8 @@ final class HeldItemSmoke {
      * Whether smoke is drawn for a hand mode. Only first person has a switch;
      * everyone else's torches always smoke, as placed ones do.
      */
-    static boolean showsFor(ModelTransformationMode mode, boolean firstPersonSmokeEnabled) {
-        return !mode.isFirstPerson() || firstPersonSmokeEnabled;
+    static boolean showsFor(ItemDisplayContext mode, boolean firstPersonSmokeEnabled) {
+        return !mode.firstPerson() || firstPersonSmokeEnabled;
     }
 
     /**
@@ -129,7 +129,7 @@ final class HeldItemSmoke {
 
     private static void fill(Puff puff, long seed, float age, int maxAge) {
         // Particle(world, x, y, z, 0, 0, 0): a random direction, a random speed,
-        // a fixed upward bias, then AscendingParticle's multiplier.
+        // a fixed upward bias, then BaseAshSmokeParticle's multiplier.
         float dx = (unit(seed, 1) * 2.0f - 1.0f) * 0.4f;
         float dy = (unit(seed, 2) * 2.0f - 1.0f) * 0.4f;
         float dz = (unit(seed, 3) * 2.0f - 1.0f) * 0.4f;

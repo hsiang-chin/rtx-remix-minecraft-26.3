@@ -5,7 +5,7 @@
 package com.nvidia.rtxremix.minecraft.terrain.visibility;
 
 /**
- * Section-addressed access to the built-chunk slots owned by BuiltChunkStorage.
+ * Section-addressed access to the built-chunk slots owned by ViewArea.
  */
 public interface BuiltChunkStorageSectionAccess {
 
@@ -19,7 +19,7 @@ public interface BuiltChunkStorageSectionAccess {
 
     /**
      * Applies one chunk-load or light-data re-flag request for a section, vanilla's
-     * WorldRenderer.scheduleBlockRenders(III), under the Remix capture rule. The
+     * LevelRenderer.setSectionDirtyWithNeighbors(III), under the Remix capture rule. The
      * section's own slot is flagged as vanilla flags it. Each of the eight horizontal
      * neighbour slots at the same section Y is flagged only if it holds that section,
      * has no rebuild pending, and its last region snapshot did not contain the loading

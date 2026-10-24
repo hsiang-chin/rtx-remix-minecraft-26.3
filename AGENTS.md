@@ -251,13 +251,13 @@ diluting the sampler's candidate pool.
 - Ordinary classes must not live in the mixin package (`MixinPackageBoundaryTest`).
 - A mixin that cancels vanilla work replays the GL, fog, and framebuffer state
   its target would have set (`WorldRendererMixin`).
-- Never cancel `WorldRenderer.render()` itself or return early past
-  `setupTerrain`. Remix is hosted inside vanilla's traversal and captures its
+- Never cancel `LevelRenderer.renderLevel()` itself or return early past
+  `setupRender`. Remix is hosted inside vanilla's traversal and captures its
   sub-passes in place. Cancel only replaced draws and preserve their net state
   changes; see [Cancelling Vanilla Render Work](CONTRIBUTING.md#cancelling-vanilla-render-work).
 - A terrain recapture must clear Remix terrain, reload vanilla terrain, and
   explicitly queue the previous built set. Snapshot `builtSections` before
-  `WorldRenderer.reload()` forgets it, then call `recaptureTerrainForRemix`.
+  `LevelRenderer.allChanged()` forgets it, then call `recaptureTerrainForRemix`.
   `RtxRemixMod.rebuildLoadedTerrain()` owns this sequence. Commit settings once
   per transaction, never once per slider step.
 - Schedule world-transition work through `client.execute`, not a flag drained
@@ -304,8 +304,8 @@ diluting the sampler's candidate pool.
   `CommandLineRedaction`).
 - Vanilla's shared worker pool and section-builder concurrency stay capped
   (`WorkerPoolCap`, `SectionBuildConcurrency`).
-- Nothing but the render thread reads client light (`World.getLightLevel`,
-  `LightingProvider.get`) while capture is on: the published snapshot is then
+- Nothing but the render thread reads client light (`Level.getBrightness`,
+  `LevelLightEngine.getLayerListener`) while capture is on: the published snapshot is then
   the engine's live map (`ClientLightSnapshotPolicy`, `LightStorageMixin`).
 - There is one overlay toggle path. `RemixInputGate` alone owns the capture
   session. Every open request goes through `RtxRemixMod.openRemixMenu`, and

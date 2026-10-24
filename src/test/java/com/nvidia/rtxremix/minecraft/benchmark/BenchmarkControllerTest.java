@@ -28,7 +28,7 @@ class BenchmarkControllerTest {
      */
     @Test
     void isWorldLoadScreenNameMatchesLoadingScreensOnly() {
-        assertTrue(BenchmarkController.isWorldLoadScreenName("DownloadingTerrainScreen"));
+        assertTrue(BenchmarkController.isWorldLoadScreenName("ReceivingLevelScreen"));
         assertTrue(BenchmarkController.isWorldLoadScreenName("LevelLoadingScreen"));
         assertFalse(BenchmarkController.isWorldLoadScreenName("GameMenuScreen"));
         assertFalse(BenchmarkController.isWorldLoadScreenName("ChatScreen"));

@@ -5,8 +5,8 @@
 package com.nvidia.rtxremix.minecraft.mixin;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.nvidia.rtxremix.minecraft.gl.DynamicBufferUpload;
-import net.minecraft.client.gl.VertexBuffer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -35,8 +35,8 @@ public abstract class VertexBufferMixin {
     // production (intermediary-mapped) client.
     @Redirect(
         method = {
-            "uploadIndexBuffer(Lnet/minecraft/client/util/BufferAllocator$CloseableBuffer;)V",
-            "uploadIndexBuffer(Lnet/minecraft/client/render/BuiltBuffer$DrawParameters;Ljava/nio/ByteBuffer;)Lcom/mojang/blaze3d/systems/RenderSystem$ShapeIndexBuffer;"
+            "uploadIndexBuffer(Lcom/mojang/blaze3d/vertex/ByteBufferBuilder$Result;)V",
+            "uploadIndexBuffer(Lcom/mojang/blaze3d/vertex/MeshData$DrawState;Ljava/nio/ByteBuffer;)Lcom/mojang/blaze3d/systems/RenderSystem$AutoStorageIndexBuffer;"
         },
         at = @At(value = "INVOKE", target = rtxremix$GL_BUFFER_DATA))
     private void rtxremix$uploadIndexData(int target, ByteBuffer data, int usage) {

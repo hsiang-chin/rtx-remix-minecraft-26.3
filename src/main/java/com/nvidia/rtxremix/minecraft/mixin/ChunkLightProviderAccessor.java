@@ -4,18 +4,18 @@
  */
 package com.nvidia.rtxremix.minecraft.mixin;
 
-import net.minecraft.world.chunk.light.ChunkLightProvider;
-import net.minecraft.world.chunk.light.LightStorage;
+import net.minecraft.world.level.lighting.LayerLightSectionStorage;
+import net.minecraft.world.level.lighting.LightEngine;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 /**
- * Vanilla hands out each layer's ChunkLightProvider through {@code LightingProvider.get}
- * but keeps its LightStorage to itself; the RTX toggle needs the storage to republish a
+ * Vanilla hands out each layer's LightEngine through {@code LevelLightEngine.getLayerListener}
+ * but keeps its LayerLightSectionStorage to itself; the RTX toggle needs the storage to republish a
  * real light snapshot before capture switches off.
  */
-@Mixin(ChunkLightProvider.class)
+@Mixin(LightEngine.class)
 public interface ChunkLightProviderAccessor {
-    @Accessor("lightStorage")
-    LightStorage<?> rtxremix$getLightStorage();
+    @Accessor("storage")
+    LayerLightSectionStorage<?> rtxremix$getLightStorage();
 }

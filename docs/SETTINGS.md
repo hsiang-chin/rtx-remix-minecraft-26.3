@@ -133,18 +133,18 @@ You can delete the file to start over.
 The registry is built after `initializeRemix()` because its getters and
 appliers bind to the live renderer managers. A renderer reinitialization path
 must rebuild those bindings. `RtxSettingsFactory` defines controls,
-`RtxOptionFactory` adapts them to vanilla `SimpleOption`, and
+`RtxOptionFactory` adapts them to vanilla `OptionInstance`, and
 `RtxSettingsCategoryScreen` commits pending values on close.
 
 ### Deferred Does Not Mean Apply On Release
 
 `RtxSetting.deferSliderApply()` makes
 `RtxOptionFactory.sliderApplyPolicy` return `applyValueImmediately() == false`.
-In Minecraft 1.21.1, `SimpleOption.OptionSliderWidgetImpl` then rearms
-`timeToApply = now + 600 ms` on each drag step and applies the pending value
-from `renderWidget` after that pause. `SliderWidget.onRelease` does not apply
+In Minecraft 1.21.1, `OptionInstance.OptionInstanceSliderButton` then rearms
+`delayedApplyAt = now + 600 ms` on each drag step and applies the pending value
+from `renderWidget` after that pause. `AbstractSliderButton.onRelease` does not apply
 it. The category's `close()` also calls
-`OptionListWidget.applyAllPendingValues()`.
+`OptionsList.applyUnsavedChanges()`.
 
 An expensive applier can therefore run once per long pause during a drag, not
 only once at its end. `clouds.vanillaEdgeSmoothness` and `clouds.size` accept
@@ -155,7 +155,7 @@ changed; only then does `RtxRemixMod.rebuildTerrainForMaterialSettings()`
 recreate shared materials and recapture terrain. Keep this separate from the
 Block Lights transaction.
 
-Ordinary `SimpleOption` sliders apply live, but their change-consumer runs only
+Ordinary `OptionInstance` sliders apply live, but their change-consumer runs only
 when the value differs from the option's current value. Returning to a displayed
 default is still a real write when the old value differs. A runtime-backed
 Image & Exposure setting remains a User Settings opinion even after that reset;
@@ -182,10 +182,10 @@ still starts.
 
 ### Widget Layout And Labels
 
-`OptionListWidget` normally pairs two 150 px controls per row, or uses one
+`OptionsList` normally pairs two 150 px controls per row, or uses one
 310 px control. A `Label: Value` string has a 146 px budget after its margins;
 the 98 px footer buttons have 94 px. Overflow scrolls as a marquee through
-`ClickableWidget.drawScrollableText`, rather than wrapping. A screenshot then
+`AbstractWidget.renderScrollingString`, rather than wrapping. A screenshot then
 catches an arbitrary clipped label or value.
 
 When adding a control, register its widest value in `SettingsRowWidthTest` and
@@ -193,8 +193,8 @@ add its label and tooltip in `assets/rtx-remix-renderer/lang/en_us.json`.
 The test measures real default-font advances. Keep values short and shorten
 labels before values; an overflowing existing label is not a precedent.
 
-Do not refresh a `GameOptionsScreen` with `clearAndInit()`: its persistent
-`ThreePartsLayoutWidget` would acquire another list and dark background.
+Do not refresh a `OptionsSubScreen` with `rebuildWidgets()`: its persistent
+`HeaderAndFooterLayout` would acquire another list and dark background.
 Open a fresh screen instance, as the settings reset paths do.
 
 ## Going Further

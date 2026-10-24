@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <p>The surface-mode verdict decides the material a layer is built with. The
  * streamed-per-frame verdict decides which layers bypass the mesh pool: a false positive
  * rebuilds a shareable mesh every frame, a false negative pools a mesh whose content
- * never repeats and fills the pool with dead entries. {@code RenderLayer} instances are
+ * never repeats and fills the pool with dead entries. {@code RenderType} instances are
  * not constructed here, because their static initialiser reaches shader programs, so
  * both classifications are tested through their pure helpers.
  */

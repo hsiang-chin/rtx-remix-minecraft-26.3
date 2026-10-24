@@ -14,7 +14,7 @@ import java.util.function.BooleanSupplier;
  * <p>The client light storage publishes its live map instead of a clone while capture is on
  * ({@link ClientLightSnapshotPolicy}), which is only safe while no such build is running. A
  * build latches the capture gate once at its start, and one that latched capture off keeps
- * running after {@code setRtxEnabled(true)}: {@code WorldRenderer.reload} cancels queued
+ * running after {@code setRtxEnabled(true)}: {@code LevelRenderer.allChanged} cancels queued
  * tasks, not running ones. The render thread therefore aliases only while this count is
  * zero.
  *

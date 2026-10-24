@@ -12,7 +12,7 @@ class ClientViewDistanceTest {
 
     @Test
     void withoutAClientTheAccessorFallsBackToTwelveChunks() {
-        // Headless tests have no MinecraftClient, so the accessor's fallback is what
+        // Headless tests have no Minecraft, so the accessor's fallback is what
         // every caller sees.
         assertEquals(12, ClientViewDistance.chunks());
         assertEquals(192.0, ClientViewDistance.blocks());

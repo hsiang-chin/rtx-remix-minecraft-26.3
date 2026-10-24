@@ -5,7 +5,7 @@
 package com.nvidia.rtxremix.minecraft.terrain;
 
 /**
- * Snapshot control of one client light storage, implemented by the LightStorage mixin.
+ * Snapshot control of one client light storage, implemented by the LayerLightSectionStorage mixin.
  */
 public interface LightStorageSnapshotAccess {
 

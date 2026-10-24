@@ -4,14 +4,14 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Hand;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Thread-local context tracking whether a Remix capture is open and which rigid
@@ -23,7 +23,7 @@ import java.util.List;
  * one (an entity rendered from inside another render, such as a spawner's display
  * entity) appends its bones to the enclosing capture, exactly as feature-renderer
  * overlays already do. Bone boundaries are detected by
- * {@link RemixCapturingConsumer} when the {@code MatrixStack.Entry} pose changes
+ * {@link RemixCapturingConsumer} when the {@code PoseStack.Pose} pose changes
  * between vertices.
  *
  * <h3>Rigid pivot tracking</h3>
@@ -46,7 +46,7 @@ public final class EntityRenderContext {
     private boolean remixPass;
 
     /** First-person hand currently being rendered, or null outside that path. */
-    private Hand activeHand;
+    private InteractionHand activeHand;
     /** Entity whose hand-held item is being rendered, or null outside a held-item render. */
     private LivingEntity heldItemHolder;
     private int blockItemLayer = NO_BLOCK_ITEM;
@@ -62,7 +62,7 @@ public final class EntityRenderContext {
      *  Pre-allocated Matrix4f objects are reused across captures to avoid GC pressure. */
     private final List<Matrix4f> boneTransforms = new ArrayList<>();
     /** Hand ownership parallel to {@link #boneTransforms}; enum values are allocation-free. */
-    private final List<Hand> transformHands = new ArrayList<>();
+    private final List<InteractionHand> transformHands = new ArrayList<>();
     private int bonePoolHighWater = 0;
 
     // ---- Static access ----
@@ -164,10 +164,10 @@ public final class EntityRenderContext {
     // ---- Bone tracking ----
 
     /**
-     * Called at each {@code ModelPart.Cuboid.renderCuboid()} to register a rigid pivot.
+     * Called at each {@code ModelPart.Cube.compile()} to register a rigid pivot.
      *
      * <p>Bones are appended in traversal order. Several rendering passes can run
-     * for one entity (base model plus FeatureRenderer overlays) and each appends
+     * for one entity (base model plus RenderLayer overlays) and each appends
      * its own bones to the same array, so an index is absolute across the whole
      * capture rather than relative to a layer.
      *
@@ -199,7 +199,7 @@ public final class EntityRenderContext {
     }
 
     /** Marks subsequent first-person transforms as belonging to {@code hand}. */
-    public void setActiveHand(Hand hand) {
+    public void setActiveHand(InteractionHand hand) {
         activeHand = hand;
     }
 
@@ -232,7 +232,7 @@ public final class EntityRenderContext {
     }
 
     /** Returns first-person hand ownership for a captured transform, if any. */
-    public Hand handForTransform(int transformIndex) {
+    public InteractionHand handForTransform(int transformIndex) {
         return transformIndex >= 0 && transformIndex < boneCounter
                 ? transformHands.get(transformIndex)
                 : null;
