@@ -11,7 +11,7 @@ import net.minecraft.resources.Identifier;
 
 /**
  * Captured block-level mesh data for a single chunk section (16x16x16),
- * produced by {@link BlockQuadEmitter}.
+ * produced by {@code BlockQuadEmitter}.
  *
  * <p>Mesh data is pre-categorized and interleaved in HardcodedVertex
  * layout via {@link SectionMeshData}. No intermediate SoA copies.

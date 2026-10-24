@@ -82,7 +82,14 @@ public final class RemixInputGate {
      */
     private final byte[] resolvedVisibility = new byte[RESOLVED_HIDDEN_MENU.length];
 
-    /** Decides whether Minecraft may handle a key event. */
+    /**
+     * Decides whether Minecraft may handle a key event.
+     *
+     * <p>TODO(port-26.3: input): {@code key} and {@code action} now use
+     * {@link InputConstants}: a key is an SDL scancode, not a GLFW key code, and
+     * {@code REPEAT} is -1. The mixins that feed this are parked, so nothing converts
+     * their arguments yet.
+     */
     public KeyDecision onKey(int key, int action, boolean altDown, boolean controlDown) {
         boolean altX = action == InputConstants.PRESS
                 && key == InputConstants.KEY_X

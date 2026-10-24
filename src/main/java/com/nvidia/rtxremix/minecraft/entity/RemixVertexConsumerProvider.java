@@ -11,14 +11,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 
 /**
- * The {@link MultiBufferSource} every Remix capture pass renders into.
+ * The buffer provider every Remix capture pass renders into.
  *
- * <p>Stands in for the vanilla {@code MultiBufferSource.BufferSource} while an
+ * <p>Stands in for the vanilla {@code MultiBufferSource.BufferSource}, which 26.3 removed, while an
  * entity, the first-person model or a block entity is rendered for Remix. For each
  * {@link RenderType} requested via {@link #getBuffer(RenderType)}, it returns a
  * part-recording {@link RemixCapturingConsumer} that records vertices alongside the
@@ -31,7 +30,7 @@ import net.minecraft.resources.Identifier;
  *   <li>Call {@link #endEntity()} after rendering; it returns all captured layers</li>
  * </ol>
  */
-public class RemixVertexConsumerProvider implements MultiBufferSource {
+public class RemixVertexConsumerProvider {
 
     /**
      * Consumers created during the current entity's render, keyed by RenderType, in
@@ -88,9 +87,11 @@ public class RemixVertexConsumerProvider implements MultiBufferSource {
         return resultBuffer;
     }
 
-    // ---- MultiBufferSource ----
+    // ---- Buffer requests ----
 
-    @Override
+    // TODO(port-26.3: entities): this no longer implements MultiBufferSource, which 26.3
+    // removed in favour of SubmitNodeCollector; the entity and block entity passes call
+    // it directly until the capture path is rebuilt on the collector.
     public VertexConsumer getBuffer(RenderType layer) {
         // Reuse consumer for same layer within one entity (e.g. left arm + right arm)
         for (int i = 0; i < activeCount; i++) {
@@ -174,9 +175,12 @@ public class RemixVertexConsumerProvider implements MultiBufferSource {
         static final NoOpVertexConsumer INSTANCE = new NoOpVertexConsumer();
         @Override public VertexConsumer addVertex(float x, float y, float z) { return this; }
         @Override public VertexConsumer setColor(int r, int g, int b, int a) { return this; }
+        @Override public VertexConsumer setColor(int color) { return this; }
         @Override public VertexConsumer setUv(float u, float v) { return this; }
         @Override public VertexConsumer setUv1(int u, int v) { return this; }
         @Override public VertexConsumer setUv2(int u, int v) { return this; }
+        @Override public VertexConsumer setUv3(float u, float v) { return this; }
+        @Override public VertexConsumer setLineWidth(float width) { return this; }
         @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
     }
 }

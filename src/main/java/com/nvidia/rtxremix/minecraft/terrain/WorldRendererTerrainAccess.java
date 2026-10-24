@@ -16,7 +16,7 @@ public interface WorldRendererTerrainAccess {
      * {@code SectionPos} longs. This is the terrain the player has seen:
      * vanilla builds a section when its occlusion walk reaches it, so the set is
      * the frustum-driven subset of the loaded area. Take it before a
-     * {@code LevelRenderer.allChanged()}, which forgets it.
+     * {@code LevelRenderer.invalidateCompiledGeometry}, which forgets it.
      */
     LongSet rtxremix$builtSectionPositions();
 

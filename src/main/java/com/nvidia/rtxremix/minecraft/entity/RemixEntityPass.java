@@ -6,7 +6,6 @@ package com.nvidia.rtxremix.minecraft.entity;
 
 import com.nvidia.rtxremix.minecraft.util.ClosestKHeap;
 import com.nvidia.rtxremix.minecraft.profiling.ProfileScope;
-import com.nvidia.rtxremix.minecraft.mixin.EntityRenderDispatcherAccessor;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nvidia.rtxremix.minecraft.ClientViewDistance;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -23,9 +22,8 @@ import java.util.function.IntPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Mth;
@@ -261,10 +259,6 @@ public class RemixEntityPass {
         long captureStart = System.nanoTime();
         // Remix traces shadows from the scene lights, so vanilla's blob shadow
         // quads have no consumer. Suppress them rather than capture and drop them.
-        boolean hadShadows =
-                ((EntityRenderDispatcherAccessor) dispatcher)
-                        .rtxremix$getRenderShadows();
-        dispatcher.setRenderShadow(false);
         EntityCaptureResult result;
         try {
             result = renderOneEntity(entity, dispatcher, tickDelta,
@@ -272,8 +266,6 @@ public class RemixEntityPass {
         } catch (Exception e) {
             LOGGER.error("Error capturing entity {}: {}", entity.getType(), e.getMessage());
             return true;
-        } finally {
-            dispatcher.setRenderShadow(hadShadows);
         }
         long captured = System.nanoTime();
         frameCaptureNanos += captured - captureStart;
@@ -729,15 +721,16 @@ public class RemixEntityPass {
         Vec3 entityPos = entity.getPosition(tickDelta);
         float yaw = Mth.lerp(tickDelta, entity.yRotO, entity.getYRot());
 
-        // Light is discarded by the capture; any value reaches the same result.
-        int light = LightTexture.FULL_BRIGHT;
-
         provider.beginEntity();
         EntityRenderContext ctx = EntityRenderContext.get();
 
         sharedMatrices.pushPose();
         try {
-            dispatcher.render(entity, 0.0, 0.0, 0.0, yaw, tickDelta, sharedMatrices, provider, light);
+            // TODO(port-26.3: entities): EntityRenderDispatcher.render(...) with a buffer
+            // provider is gone. 26.3 extracts an EntityRenderState and then submits it to
+            // a SubmitNodeCollector, so the capture needs a collector that records parts
+            // the way RemixVertexConsumerProvider does. Nothing is captured until then,
+            // which also means vanilla's blob shadow suppression has nothing to guard.
         } finally {
             // Both reset even if a renderer threw mid-traversal, which skips the
             // dispatcher's RETURN hook: the identity root returns every pooled

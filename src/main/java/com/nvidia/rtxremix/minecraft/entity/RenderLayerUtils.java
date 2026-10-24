@@ -4,14 +4,14 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import com.mojang.blaze3d.vertex.VertexFormatElement;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
+
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
 /**
  * Reads the layer-level facts the capture path needs from a {@link RenderType}.
@@ -88,22 +88,15 @@ final class RenderLayerUtils {
     }
 
     private static Optional<Identifier> capturableTextureUncached(RenderType layer) {
-        if (layer instanceof RenderType.CompositeRenderType multiPhase
-                && multiPhase.state().depthTestState == RenderStateShard.NO_DEPTH_TEST) {
-            return Optional.empty();
-        }
         return extractTexture(layer);
     }
 
     private static Optional<Identifier> extractTexture(RenderType layer) {
-        if (layer instanceof RenderType.CompositeRenderType multiPhase) {
-            RenderType.CompositeState phases = multiPhase.state();
-            RenderStateShard.EmptyTextureStateShard textureBase = phases.textureState;
-
-            if (textureBase instanceof RenderStateShard.TextureStateShard texture) {
-                return texture.cutoutTexture();
-            }
-        }
+        // TODO(port-26.3: entities): the texture and the unconditional-depth-test check
+        // were read from RenderStateShard state through the access widener. 26.3 keeps
+        // them in RenderSetup (texture bindings) and the layer's RenderPipeline, neither
+        // of which is reachable yet, so no layer reports a capturable texture and the
+        // provider drops every layer until the render-type rework lands.
         return Optional.empty();
     }
 
@@ -112,7 +105,7 @@ final class RenderLayerUtils {
      * do not become triangles, such as lines.
      */
     static Optional<Topology> topology(RenderType layer) {
-        return switch (layer.mode()) {
+        return switch (layer.primitiveTopology()) {
             case QUADS -> Optional.of(Topology.QUADS);
             case TRIANGLE_STRIP -> Optional.of(Topology.TRIANGLE_STRIP);
             default -> Optional.empty();
@@ -137,7 +130,7 @@ final class RenderLayerUtils {
         // capturableTexture declined must not re-enter capture through here.
         return extractTexture(layer).isEmpty()
                 && topology(layer).filter(t -> t == Topology.TRIANGLE_STRIP).isPresent()
-                && layer.format().getElements().contains(VertexFormatElement.COLOR);
+                && layer.format().contains(DefaultVertexFormat.COLOR_SEMANTIC_NAME);
     }
 
     /**
@@ -155,9 +148,9 @@ final class RenderLayerUtils {
     }
 
     private static boolean isStreamedPerFrameUncached(RenderType layer) {
-        boolean beaconBeamProgram = layer instanceof RenderType.CompositeRenderType multiPhase
-                && multiPhase.state().shaderState == RenderStateShard.RENDERTYPE_BEACON_BEAM_SHADER;
-        return classifyStreamedPerFrame(topology(layer).orElse(Topology.QUADS), beaconBeamProgram);
+        // TODO(port-26.3: entities): the beacon beam was recognised by its shader program;
+        // 26.3 identifies it by pipeline, so only the triangle-strip rule applies for now.
+        return classifyStreamedPerFrame(topology(layer).orElse(Topology.QUADS), false);
     }
 
     static boolean classifyStreamedPerFrame(Topology topology, boolean beaconBeamProgram) {
@@ -175,20 +168,11 @@ final class RenderLayerUtils {
      * behaviour and it is classified as translucent.
      */
     static SurfaceMode surfaceMode(RenderType layer) {
-        if (!(layer instanceof RenderType.CompositeRenderType multiPhase)) {
-            return SurfaceMode.CUTOUT;
-        }
-
-        RenderType.CompositeState phases = multiPhase.state();
-        return classifySurfaceMode(
-                phases.shaderState == RenderStateShard.RENDERTYPE_EYES_SHADER
-                        || phases.shaderState == RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_EMISSIVE_SHADER,
-                phases.transparencyState == RenderStateShard.ADDITIVE_TRANSPARENCY,
-                phases.transparencyState == RenderStateShard.TRANSLUCENT_TRANSPARENCY
-                        || phases.transparencyState == RenderStateShard.CRUMBLING_TRANSPARENCY,
-                phases.shaderState == RenderStateShard.RENDERTYPE_ENTITY_SOLID_SHADER,
-                phases.shaderState == RenderStateShard.RENDERTYPE_TEXT_SHADER
-                        || phases.shaderState == RenderStateShard.RENDERTYPE_TEXT_INTENSITY_SHADER);
+        // TODO(port-26.3: entities): the program and transparency phases this classified
+        // from no longer exist as RenderStateShard fields; the 26.3 equivalent is the
+        // layer's RenderPipeline (shader, blend function). Until then every layer is
+        // treated as a cutout, which is what a non-composite layer already got.
+        return SurfaceMode.CUTOUT;
     }
 
     /**

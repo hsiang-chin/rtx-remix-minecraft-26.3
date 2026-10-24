@@ -34,7 +34,7 @@ import net.minecraft.resources.Identifier;
  *
  * <p>After all blocks: {@link #buildMeshData} produces a compact {@link SectionMeshData}.
  *
- * <p>One instance per worker thread (ThreadLocal in {@link BlockQuadEmitter}).
+ * <p>One instance per worker thread (ThreadLocal in {@code BlockQuadEmitter}).
  */
 public final class DirectQuadWriter {
 

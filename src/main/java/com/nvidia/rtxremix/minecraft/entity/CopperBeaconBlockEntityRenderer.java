@@ -4,7 +4,6 @@
  */
 package com.nvidia.rtxremix.minecraft.entity;
 
-import com.nvidia.rtxremix.minecraft.block.CopperBeaconBlock;
 import com.nvidia.rtxremix.minecraft.block.CopperBeaconBlockEntity;
 import com.nvidia.rtxremix.minecraft.block.CopperBeaconPose;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -14,48 +13,37 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.nvidia.rtxremix.minecraft.RtxRemixCommonMod;
 import org.joml.Quaternionf;
 
 /** Renders the independently rotating yoke and lamp head above the static mount. */
 public final class CopperBeaconBlockEntityRenderer
-        implements BlockEntityRenderer<CopperBeaconBlockEntity> {
+        implements BlockEntityRenderer<CopperBeaconBlockEntity, BlockEntityRenderState> {
 
     public static final ModelLayerLocation BODY_MODEL_LAYER = new ModelLayerLocation(
             Identifier.fromNamespaceAndPath(RtxRemixCommonMod.MOD_ID, "copper_beacon"), "body");
     public static final ModelLayerLocation LENS_MODEL_LAYER = new ModelLayerLocation(
             Identifier.fromNamespaceAndPath(RtxRemixCommonMod.MOD_ID, "copper_beacon"), "lens");
-    private static final Material COPPER_TEXTURE = new Material(
-            InventoryMenu.BLOCK_ATLAS,
-            Identifier.withDefaultNamespace("block/copper_block"));
     static final Identifier LENS_SPRITE_ID =
             Identifier.fromNamespaceAndPath(RtxRemixCommonMod.MOD_ID, "block/copper_beacon_lens");
     static final Identifier UNLIT_LENS_SPRITE_ID =
             Identifier.fromNamespaceAndPath(RtxRemixCommonMod.MOD_ID, "block/copper_beacon_lens_unlit");
-    private static final Material LENS_TEXTURE = new Material(
-            InventoryMenu.BLOCK_ATLAS,
-            LENS_SPRITE_ID);
-    private static final Material UNLIT_LENS_TEXTURE = new Material(
-            InventoryMenu.BLOCK_ATLAS,
-            UNLIT_LENS_SPRITE_ID);
+    private static final Material LENS_TEXTURE = new Material(LENS_SPRITE_ID);
+    private static final Material UNLIT_LENS_TEXTURE = new Material(UNLIT_LENS_SPRITE_ID);
 
     private final ModelPart yoke;
     private final ModelPart head;
     private final ModelPart lens;
     private final CopperBeaconPose.Pose pose = new CopperBeaconPose.Pose();
-    private final VerticalUvStripConsumer copperUvConsumer = new VerticalUvStripConsumer();
 
     public CopperBeaconBlockEntityRenderer(BlockEntityRendererProvider.Context context) {
         ModelPart bodyRoot = context.bakeLayer(BODY_MODEL_LAYER);
@@ -112,41 +100,21 @@ public final class CopperBeaconBlockEntityRenderer
     }
 
     @Override
-    public void render(
-            CopperBeaconBlockEntity beacon,
-            float tickDelta,
+    public BlockEntityRenderState createRenderState() {
+        return new BlockEntityRenderState();
+    }
+
+    @Override
+    public void submit(
+            BlockEntityRenderState state,
             PoseStack matrices,
-            MultiBufferSource vertexConsumers,
-            int light,
-            int overlay) {
-        BlockState state = beacon.getBlockState();
-        Direction up = state.getValue(CopperBeaconBlock.MOUNT);
-        Direction forward = state.getValue(BlockStateProperties.FACING);
-        double animationTick = CopperBeaconAnimationClock.sample(
-                beacon.getLevel(), tickDelta);
-
-        matrices.pushPose();
-        matrices.translate(0.5, 0.5, 0.5);
-        CopperBeaconPose.evaluate(
-                up,
-                forward,
-                beacon.yawAngleAt(animationTick),
-                beacon.pitchAngleAt(animationTick),
-                pose);
-        matrices.mulPose(pose.mountingRotation());
-        matrices.translate(-0.5, -0.5, -0.5);
-
-        applyArticulation(yoke, head, lens, pose);
-
-        VertexConsumer copperVertices = copperUvConsumer.wrap(
-                COPPER_TEXTURE.buffer(vertexConsumers, RenderType::entitySolid));
-        yoke.render(matrices, copperVertices, light, overlay);
-        Material lensTexture =
-                lensTexture(beacon.isActive(), beacon.getIntensityMultiplier());
-        VertexConsumer lensVertices =
-                lensTexture.buffer(vertexConsumers, RenderType::entitySolid);
-        lens.render(matrices, lensVertices, light, overlay, beacon.getLensTint());
-        matrices.popPose();
+            SubmitNodeCollector submitNodeCollector,
+            CameraRenderState camera) {
+        // TODO(port-26.3: entities): 26.3 splits block entity drawing into extractRenderState
+        // and submit, with model parts handed to the SubmitNodeCollector. The articulated
+        // draw (mounting rotation, applyArticulation, copper UV strip, tinted lens) has to
+        // be re-expressed as submitModelPart calls over a state that carries the animation
+        // angles, so nothing is submitted yet. The pose maths below is unchanged.
     }
 
     static Quaternionf mountingRotation(Direction upDirection, Direction forwardDirection) {
@@ -173,56 +141,11 @@ public final class CopperBeaconBlockEntityRenderer
                 : UNLIT_LENS_TEXTURE;
     }
 
-    static float copperTextureV(float v) {
-        return 0.25f + v * 0.5f;
-    }
-
     /**
      * Keeps resource-pack details along the texture edges while excluding all
      * four corners, where stylized copper textures commonly place rivets.
      */
-    private static final class VerticalUvStripConsumer implements VertexConsumer {
-        private VertexConsumer delegate;
-
-        VertexConsumer wrap(VertexConsumer delegate) {
-            this.delegate = delegate;
-            return this;
-        }
-
-        @Override
-        public VertexConsumer addVertex(float x, float y, float z) {
-            delegate.addVertex(x, y, z);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer setColor(int red, int green, int blue, int alpha) {
-            delegate.setColor(red, green, blue, alpha);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer setUv(float u, float v) {
-            delegate.setUv(u, copperTextureV(v));
-            return this;
-        }
-
-        @Override
-        public VertexConsumer setUv1(int u, int v) {
-            delegate.setUv1(u, v);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer setUv2(int u, int v) {
-            delegate.setUv2(u, v);
-            return this;
-        }
-
-        @Override
-        public VertexConsumer setNormal(float x, float y, float z) {
-            delegate.setNormal(x, y, z);
-            return this;
-        }
+    static float copperTextureV(float v) {
+        return 0.25f + v * 0.5f;
     }
 }

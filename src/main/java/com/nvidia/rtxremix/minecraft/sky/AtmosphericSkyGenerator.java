@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import net.minecraft.client.renderer.ShaderInstance;
 import com.nvidia.rtxremix.minecraft.profiling.ProfileScope;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL;
@@ -211,12 +210,14 @@ final class AtmosphericSkyGenerator {
             }
         }
 
-        ShaderInstance previousProgram;
+        // Vanilla no longer tracks a current shader program (26.3 draws through
+        // pipelines), so the raw GL binding is saved and restored directly.
+        int previousProgram;
         try (ProfileScope ignored =
                 ProfileScope.begin("Sky.ProceduralGeneration.StateSave")) {
             previousProgram = RenderSystem.isOnRenderThread()
-                    ? RenderSystem.getShader()
-                    : null;
+                    ? GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM)
+                    : 0;
         }
         try {
             try (ProfileScope ignored =
@@ -260,11 +261,7 @@ final class AtmosphericSkyGenerator {
                     GL21.GL_PIXEL_PACK_BUFFER,
                     0);
             GL13.glActiveTexture(GL13.GL_TEXTURE0);
-            if (previousProgram != null) {
-                previousProgram.apply();
-            } else {
-                GL20.glUseProgram(0);
-            }
+            GL20.glUseProgram(previousProgram);
         }
     }
 

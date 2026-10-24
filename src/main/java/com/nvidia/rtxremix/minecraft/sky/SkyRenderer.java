@@ -46,7 +46,6 @@ import java.nio.ByteOrder;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
@@ -225,7 +224,7 @@ public class SkyRenderer {
         }
 
         RemixAPI api = renderer.getRemixApi();
-        float[] fixedRadiance = fixedSkyRadiance(world.effects().skyType());
+        float[] fixedRadiance = fixedSkyRadiance(SkyAttributes.kindOf(world));
         if (fixedRadiance == null) {
             renderAtmosphericSky(api, world, cameraPos, tickDelta);
         } else {
@@ -238,7 +237,7 @@ public class SkyRenderer {
      *
      * @return the constant, or null for a NORMAL sky, whose dome is the time-driven atmosphere
      */
-    static float[] fixedSkyRadiance(DimensionSpecialEffects.SkyType skyType) {
+    static float[] fixedSkyRadiance(SkyAttributes.SkyKind skyType) {
         return switch (skyType) {
             case NORMAL -> null;
             case END -> END_SKY_RADIANCE;
@@ -256,7 +255,7 @@ public class SkyRenderer {
         float[] sunDirection;
         WeatherDomeState weather;
         try (ProfileScope ignored = ProfileScope.begin("Sky.Prepare")) {
-            skyAngle = world.getTimeOfDay(tickDelta);
+            skyAngle = SkyAttributes.sunAngleTurns(tickDelta);
             ConfLayerDriver confLayers = renderer.getConfLayerDriver();
             ConfLayerDriver.WeatherStrengths weatherStrengths =
                     confLayers != null && confLayers.isActive()
@@ -587,7 +586,7 @@ public class SkyRenderer {
 
         float weatherVisibility = Math.max(
                 minimumCelestialWeatherVisibility, 1.0f - clamp01(weatherOpacity));
-        float starsOpacity = starOpacity(world.getStarBrightness(tickDelta)) * weatherVisibility;
+        float starsOpacity = starOpacity(SkyAttributes.starBrightness(tickDelta)) * weatherVisibility;
         if (starsOpacity > 0.0f) {
             updateStarOpacity(starsOpacity);
             updateStarTransform(starTransform, cameraPos, skyAngle);
@@ -607,7 +606,7 @@ public class SkyRenderer {
         }
 
         if (moonOpacity > 0.0f) {
-            int moonPhase = world.getMoonPhase() & 7;
+            int moonPhase = SkyAttributes.moonPhaseIndex(tickDelta) & 7;
             updateCelestialTransform(
                     moonTransform,
                     cameraPos,
